@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Camera Preview{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<div id="preview"><img id="preview_image" width=100%></div>
+
+<script src="{{ url_for('static', filename='cam_preview.js') }}"></script>
+{% endblock %}

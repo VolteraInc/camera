@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Index{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<p>With this tool you can:</p>
+<ul>
+<li> <a href="{{ url_for('controls.controls') }}">Control</a> the laser.
+<li> <a href="{{ url_for('controls.preview') }}">Preview</a> the camera.
+</ul>
+{% endblock %}

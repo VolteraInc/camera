@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Controls{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<div id="control-block"> 
+
+<div id="laser-controls">
+
+<h2>Laser</h2>
+<div id="laser-toggle-container">
+ Power <input type="checkbox" name="laser-toggle" value="laser-toggle" id="laser-toggle">
+</div>
+
+<div class="slider-grid">
+ <div class="slider-header">Intensity (%)</div>
+ <div class="slider-body"><input type="range" min="1" max="100" value="50" class="slider" id="laser-power-adjust"></div>
+ <div class="slider-value"><span id="laser-intensity-value">50</span> %</div>
+</div>
+
+<div id="sensor-controls">
+ <h2>Sensor</h2>
+ <div class="slider-grid">
+  <div class="slider-header">Exposure (ms)</div>
+  <div class="slider-body"> <input type="range" min="1" max="50" val="10" class="slider" id="sensor-exposure-adjust"></div>
+  <div class="slider-value"><span id="sensor-exposure-value">10</span> ms</div>
+ </div>
+</div>
+
+<script src="{{ url_for('static', filename='controls.js') }}"></script>
+
+{% endblock %}
