@@ -136,3 +136,20 @@ input[type=submit] {
 #preview_image {
   width: 100%;
 }
+
+/* Slider formatting */
+.slider-grid {
+    display: inline-grid;
+    grid-template-columns: 15% 75% 10%;
+    width: 100%;
+}
+.slider-header{
+}
+.slider-body{
+}
+.slider-value{
+    text-align: right;
+}
+.slider{
+    width: 100%;
+}

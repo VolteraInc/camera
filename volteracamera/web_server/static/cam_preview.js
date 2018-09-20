@@ -1,5 +1,6 @@
+"use strict";
 
-function reload_image() {
+(function reload_image() {
 var url = '/controls/cam_image'
 fetch(url, {cache: "no-store"}).then(function(response) {
   if(response.ok) {
@@ -13,6 +14,5 @@ fetch(url, {cache: "no-store"}).then(function(response) {
     console.log('Network request for camera image failed with response ' + response.status + ': ' + response.statusText);
   }
 });
-};
+})();
 
-reload_image();

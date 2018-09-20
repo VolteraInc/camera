@@ -3,9 +3,14 @@ Class for interfacing with the camera.
 """
 import time
 from io import BytesIO
-from picamera import PiCamera
 from PIL import Image
 import numpy as np
+
+import importlib
+picam_spec = importlib.util.find_spec("picamera")
+picam_found = picam_spec is not None
+if picam_found:
+    from picamera import PiCamera
 
 
 RESOLUTION = (1280,720)
@@ -21,27 +26,29 @@ class Camera(object):
     Class that reads from the camera.
     """
 
-    def __init__(self)->None:
+    def __init__(self):
         """
         Initialization of the camera.
         """
-        print ("Starting Camera")
-        self.camera = PiCamera(sensor_mode = 1)
-        self.camera.resolution = RESOLUTION
-        self.camera.zoom = ZOOM
-        self.camera.awb_mode = AWB_MODE
-        self.camera.awb_gains = AWB_GAINS
-        self.camera.framerate = FRAMERATE
-        #time.sleep(3)
-        #self.camera.shutter_speed = SHUTTER_SPEED
-        #self.camera.exposure_mode = EXPOSURE_MODE
+        if picam_found:
+            print ("Starting Camera")
+            self.camera = PiCamera(sensor_mode = 1)
+            self.camera.resolution = RESOLUTION
+            self.camera.zoom = ZOOM
+            self.camera.awb_mode = AWB_MODE
+            self.camera.awb_gains = AWB_GAINS
+            self.camera.framerate = FRAMERATE
+            #time.sleep(3)
+            #self.camera.shutter_speed = SHUTTER_SPEED
+            #self.camera.exposure_mode = EXPOSURE_MODE
 
     def capture_stream(self)->BytesIO:
         """
         Return a PIL image.
         """
         stream = BytesIO()
-        self.camera.capture(stream, format="jpeg", quality=65, resize = (int(RESOLUTION[0]/2), int(RESOLUTION[1]/2))) #switch to rgb later
+        if picam_found:
+            self.camera.capture(stream, format="jpeg", quality=65, resize = (int(RESOLUTION[0]/2), int(RESOLUTION[1]/2))) #switch to rgb later
         stream.seek(0)
         return stream
     
@@ -57,7 +64,8 @@ class Camera(object):
         Return a 3 channel np.array (RGB)
         """
         output = np.empty((RESOLUTION[1], RESOLUTION[0], 3), dtype=np.uint8)
-        self.camera.capture(output, format="rgb")
+        if picam_found: 
+            self.camera.capture(output, format="rgb")
         return output
 
     def open(self):
@@ -78,7 +86,8 @@ class Camera(object):
         """
         Called to clean up camera context.
         """
-        self.camera.close()
+        if picam_found:
+            self.camera.close()
 
     def __exit__(self, *args):
         """
