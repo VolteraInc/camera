@@ -28,7 +28,7 @@ class Laser(object):
         Query the laser state
         """
         if gpio_found:
-            return self.laser.is_lit()
+            return self.laser.is_lit
         else:
             return False
 

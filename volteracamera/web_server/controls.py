@@ -40,7 +40,7 @@ def controls():
 @bp.route('/cam_image')
 def cam_image():
     global cam
-    check_sensor
+    check_cam()
     image_stream = cam.capture_stream()
     return send_file(image_stream, mimetype='image/png')
 
@@ -58,13 +58,14 @@ def laser_state():
     if req_data != None:
         on_off_state = bool(req_data["on_off"])
         intensity = int(req_data["intensity"])
+        if on_off_state: #if value is set to on, intensity jumps to 100%
+            laser.on()
         try:
+            print ("laser to " + str (intensity))
             laser.power = intensity
         except ValueError:
             print ("Bad laser power received.")
-        if on_off_state:
-            laser.on()
-        else:
+        if not on_off_state: #state switches to on when value changed.
             laser.off()
     lstate = {"on_off": laser.state(), "intensity": laser.power }
     return jsonify(lstate)
