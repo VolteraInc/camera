@@ -8,7 +8,7 @@ fetch(url, {cache: "no-store"}).then(function(response) {
       var objectURL = URL.createObjectURL(blob);
       var img = document.getElementById('preview_image');
       img.src = objectURL;
-      setTimeout (reload_image, 500);
+      setTimeout (reload_image, 1);
     });
   } else {
     console.log('Network request for camera image failed with response ' + response.status + ': ' + response.statusText);

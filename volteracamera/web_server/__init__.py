@@ -1,6 +1,29 @@
 import os
 
 from flask import Flask
+from ..control.camera import Camera
+from ..control.laser import Laser
+
+#initialize global camera and laser objects.
+cam = None
+laser = None
+
+#access the global camera object 
+def get_cam():
+    global cam
+    if cam == None:
+        cam = Camera()
+        cam.open()
+    return cam
+
+#access the global laser object.
+def get_laser():
+    global laser
+    if laser == None:
+        laser = Laser()
+    return laser
+
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -24,7 +47,9 @@ def create_app(test_config=None):
 
     from . import app
     from . import controls
+    from . import calibration
     application.register_blueprint(app.bp) 
     application.register_blueprint(controls.bp)
+    application.register_blueprint(calibration.bp)
 
     return application

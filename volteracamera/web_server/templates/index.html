@@ -7,7 +7,9 @@
 {% block content %}
 <p>With this tool you can:</p>
 <ul>
-<li> <a href="{{ url_for('controls.controls') }}">Control</a> the laser.
-<li> <a href="{{ url_for('controls.preview') }}">Preview</a> the camera.
+<li> <a href="{{ url_for('controls.controls') }}">Controls</a> - Control the sensor and laser settings.
+<li> <a href="{{ url_for('controls.preview') }}">Preview</a> - Live view of the camera for previewing and image capture.
+<li> <a href="{{ url_for('calibration.index') }}">Calibration</a> - Calibration tools.
+<li> <a href="#">Laser</a> - Live view of the 3D data (not working yet).
 </ul>
 {% endblock %}

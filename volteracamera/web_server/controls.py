@@ -1,26 +1,10 @@
-from flask import Blueprint, render_template, send_file, current_app, request, jsonify
+from flask import Blueprint, render_template, send_file, request, jsonify
 
-from ..control.camera import Camera
-from ..control.laser import Laser
+from . import get_cam, get_laser
 
 bp = Blueprint("controls", __name__, url_prefix="/controls")
 
-cam = None
-laser = None
-
 #laser and camera state checks (prevent multiple initialization)
-def check_cam():
-    global cam
-    if cam == None:
-        cam = Camera()
-        cam.open()
-
-def check_laser():
-    global laser
-    if laser == None:
-        laser = Laser()
-
-
 #routes
 @bp.route('/preview')
 def preview():
@@ -39,8 +23,7 @@ def controls():
 #Requests for image data.
 @bp.route('/cam_image')
 def cam_image():
-    global cam
-    check_cam()
+    cam = get_cam()
     image_stream = cam.capture_stream()
     return send_file(image_stream, mimetype='image/png')
 
@@ -52,8 +35,7 @@ def laser_state():
     If no data is recieved, return the current state.
     state variables are "on_off" for the state (true or false) and "intensity" as a percent
     """
-    global laser
-    check_laser()
+    laser = get_laser()
     req_data = request.get_json()
     if req_data != None:
         on_off_state = bool(req_data["on_off"])
@@ -73,6 +55,15 @@ def laser_state():
 #Requests for sensor state. No data means query for state.
 @bp.route('sensor_state', methods=["POST"])
 def sensor_state():
-    check_sensor()
-    global cam
-    pass
+    """
+    Set the exposure time of the camera in ms.
+    If no data sent, return current value.
+    If data sent, update, and then send back updated value.
+    """
+    cam = get_cam()
+    req_data = request.get_json()
+    if req_data != None:
+        print (req_data['exposure'])
+        cam.exposure = int(req_data['exposure'])
+    sstate = {'exposure': cam.exposure}
+    return jsonify(sstate)

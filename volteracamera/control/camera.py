@@ -39,8 +39,8 @@ class Camera(object):
             self.camera.awb_gains = AWB_GAINS
             self.camera.framerate = FRAMERATE
             #time.sleep(3)
-            #self.camera.shutter_speed = SHUTTER_SPEED
-            #self.camera.exposure_mode = EXPOSURE_MODE
+            self.camera.shutter_speed = SHUTTER_SPEED
+            self.camera.exposure_mode = EXPOSURE_MODE
 
     def capture_stream(self)->BytesIO:
         """
@@ -74,6 +74,21 @@ class Camera(object):
         """
         #self.camera.start_preview()
         #time.sleep(2)
+
+    @property
+    def exposure(self):
+        return self.camera.shutter_speed / 1E3
+
+    @exposure.setter
+    def exposure(self, exposure):
+        """
+        Set the exposure value (in ms)
+        """
+        if exposure == 0:
+            self.camera.exposure_mode="auto"
+        else:
+            self.camera.exposure_mode="off"
+        self.camera.shutter_speed = int(exposure*1E3)
      
     def __enter__(self):
         """
