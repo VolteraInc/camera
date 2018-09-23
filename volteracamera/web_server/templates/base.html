@@ -17,5 +17,20 @@
   {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
   {% endfor %}
-  {% block content %}{% endblock %}
-</section>
+
+  <div id="split-content">
+    <div id="image-sidebar">
+      <a href="javascript:void(0)" id="toggle-sidebar" onclick="closeNav()"><</a>
+        <div id="hideable-images">
+            <h3><ul>Saved Images</ul></h3>
+        </div>
+        <div id="image-sidebar-contents"></div>
+    </div> <!-- image-sidebar -->
+    <div id="content">
+      {% block content %}{% endblock %} 
+    </div> <!-- content -->
+
+  </div> <!-- split-content -->
+
+  <script src="{{ url_for('static', filename='image_sidebar.js') }}"></script> 
+</section> <!-- content -->

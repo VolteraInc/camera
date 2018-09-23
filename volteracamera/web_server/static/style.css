@@ -5,7 +5,8 @@ html {
 }
 
 body {
-  max-width: 960px;
+  /* max-width: 960px; */
+  max-width: 85%;
   margin: 0 auto;
   background: white;
 }
@@ -152,4 +153,26 @@ input[type=submit] {
 }
 .slider{
     width: 100%;
+}
+
+/* Grid for content area */
+#split-content {
+    display: inline-grid;
+    grid-template-columns: 4% 96%;
+    width: 100%;
+}
+
+#hideable-images {
+    display: none;    
+}
+
+#image-sidebar {
+  height: 100%
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  border: 1px solid black;
+  background: lightgrey;
+  margin: 0.5em 0.5em;
 }

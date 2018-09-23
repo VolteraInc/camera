@@ -6,7 +6,10 @@
 
 {% block content %}
 
+<button id="capture-button"  onclick="captureImage()">Capture Image</button> 
+
 <div id="preview"><img id="preview_image" width=100%></div>
+
 
 <script src="{{ url_for('static', filename='cam_preview.js') }}"></script>
 {% endblock %}
