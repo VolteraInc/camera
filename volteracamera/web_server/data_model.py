@@ -12,9 +12,9 @@ class ImageData:
     Class for saving image data and associate other data.
     """
 
-    def __init__(self, image_array->np.ndarray)->None:
+    def __init__(self, image_array: np.ndarray)->None:
         self.image_array = image_array
-        self.image = PIL.Image.fromarray(self.image_array, "RGB")
-        self.thumbnail = image.thumbnail (THUMBNAIL_SIZE)
+        self.image = Image.fromarray(self.image_array, "RGB")
+        self.thumbnail = self.image.thumbnail (THUMBNAIL_SIZE)
 
 

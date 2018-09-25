@@ -5,6 +5,7 @@ import time
 from io import BytesIO
 from PIL import Image
 import numpy as np
+import threading
 
 import importlib
 picam_spec = importlib.util.find_spec("picamera")
@@ -41,6 +42,7 @@ class Camera(object):
             #time.sleep(3)
             self.camera.shutter_speed = SHUTTER_SPEED
             self.camera.exposure_mode = EXPOSURE_MODE
+            self.capture_lock = threading.Lock()
 
     def capture_stream(self)->BytesIO:
         """
@@ -48,7 +50,8 @@ class Camera(object):
         """
         stream = BytesIO()
         if picam_found:
-            self.camera.capture(stream, format="jpeg", quality=65, resize = (int(RESOLUTION[0]/2), int(RESOLUTION[1]/2))) #switch to rgb later
+            with self.capture_lock:
+                self.camera.capture(stream, format="jpeg", quality=65, resize = (int(RESOLUTION[0]/2), int(RESOLUTION[1]/2))) #switch to rgb later
         stream.seek(0)
         return stream
     
@@ -65,7 +68,8 @@ class Camera(object):
         """
         output = np.empty((RESOLUTION[1], RESOLUTION[0], 3), dtype=np.uint8)
         if picam_found: 
-            self.camera.capture(output, format="rgb")
+            with self.capture_lock:
+                self.camera.capture(output, format="rgb")
         return output
 
     def open(self):

@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, send_file, request, jsonify, session
+from flask import Blueprint, render_template, send_file, request, jsonify
 
-from . import get_cam, get_laser
+from . import get_cam, get_laser, get_data_store
+from .data_model import ImageData
 
 bp = Blueprint("controls", __name__, url_prefix="/controls")
 
@@ -21,8 +22,8 @@ def controls():
     return render_template("controls/controls.html")
 
 #Requests for preview image data.
-@bp.route('/cam_image')
-def cam_image():
+@bp.route('/preview_cam_image')
+def preview_cam_image():
     cam = get_cam()
     image_stream = cam.capture_stream()
     return send_file(image_stream, mimetype='image/png')
@@ -35,10 +36,8 @@ def capture_proper_image():
     """
     cam = get_cam()
     image_array = cam.capture_array()
-    if "images" in session:
-        session["images"].append(image_array)
-    else:
-        session["images"] =  [image_array]
+    data = get_data_store()
+    data["images"].append(ImageData(image_array))
     return "OK"
 
 #Requests for laser state. No data means query for state.

@@ -1,3 +1,4 @@
+import {loadSidebar} from '/static/image_sidebar.js';
 "use strict";
 
 function captureImage() {
@@ -6,8 +7,8 @@ function captureImage() {
   fetch ("/controls/capture_proper_image").then(
     function(response) {
       if(response.ok) {
-  
-
+        console.log ("Loading sidebar after capture")
+        sidebar.loadSidebar()
       } else {
         console.log('Network request to save image fialed, respone ' + response.status + ': ' + response.statusText);
       }
@@ -15,9 +16,11 @@ function captureImage() {
   );
 }
 
+
+//Function for reloading images automatically
 function image_loader() {
  
-  const url = '/controls/cam_image'
+  const url = '/controls/preview_cam_image'
   var timeout; 
 
   function reload_image() {
@@ -47,6 +50,7 @@ function image_loader() {
 
 };
 
+//instance of the reloader
 var loader = image_loader();
 
 

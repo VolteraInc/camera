@@ -7,26 +7,43 @@ from ..control.laser import Laser
 #initialize global camera and laser objects.
 cam = None
 laser = None
+data = {
+        "images": [],
+        "intrinsics": None,
+        "distortion": None,
+        "laser_plane":None
+    }
 
-#access the global camera object 
 def get_cam():
+    """
+    access the global camera object 
+    """
     global cam
     if cam == None:
         cam = Camera()
         cam.open()
     return cam
 
-#access the global laser object.
 def get_laser():
+    """
+    access the global laser object.
+    """
     global laser
     if laser == None:
         laser = Laser()
     return laser
 
-
+def get_data_store():
+    """
+    Access the global data storage.
+    """
+    global data
+    return data
 
 def create_app(test_config=None):
-    # create and configure the app
+    """
+    create and configure the app
+    """
     application = Flask(__name__, instance_relative_config=True)
     application.config.from_mapping(
         SECRET_KEY='dev',
