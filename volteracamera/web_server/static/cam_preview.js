@@ -1,16 +1,22 @@
 import {loadSidebar} from '/static/image_sidebar.js';
 "use strict";
 
+//Expose capture image to namespace outside module.
+window.captureImage = captureImage
+window.loadSidebar = loadSidebar
+
 function captureImage() {
   loader.pause();
   
   fetch ("/controls/capture_proper_image").then(
     function(response) {
       if(response.ok) {
-        console.log ("Loading sidebar after capture")
-        sidebar.loadSidebar()
+        let sidebar_element = document.getElementById('image-sidebar-contents');
+        loadSidebar(sidebar_element)
+        loader.start()
       } else {
         console.log('Network request to save image fialed, respone ' + response.status + ': ' + response.statusText);
+        loader.start()
       }
     }
   );

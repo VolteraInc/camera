@@ -1,4 +1,12 @@
-from flask import Blueprint, render_template, session, jsonify, url_for
+from flask import (
+    Blueprint, 
+    render_template, 
+    session, 
+    jsonify, 
+    url_for,
+    make_response,
+    send_file
+    )
 from io import BytesIO
 
 from . import get_data_store
@@ -31,11 +39,13 @@ def capture_image_thumb(num):
     return the capture image thumbnail at location num
     """
     image_data = get_data_store()["images"]
-    if len(image_data) >= int(num):
-        return make_respoonse ("Not enough images available", 404)
+    if len(image_data) < int(num):
+        return make_response ("Not enough images available", 404)
 
-    image_stream = BytesIO
+    image_stream = BytesIO()
+    print (image_data[int(num)].thumbnail)
     image_data[int(num)].thumbnail.save(image_stream, format='png')       
+    image_stream.seek(0)
     return send_file(image_stream, mimetype='image/png')
 
 @bp.route("/capture_image_full/<num>")
@@ -44,11 +54,13 @@ def capture_image_full(num):
     return the full size captured image at location num
     """
     image_data = get_data_store()["images"] 
-    if len(image_data) >= int(num):
-        return make_respoonse ("Not enough images available", 404)
+    if len(image_data) < int(num):
+        return make_response ("Not enough images available", 404)
 
-    image_stream = BytesIO
-    image_data[int(num)].image.save(image_stream, format='png')       
+    image_stream = BytesIO()
+    image_data[int(num)].image.save(image_stream, format='png') 
+    image_stream.seek(0)
+    #image_data[int(num)].image.save("out.jpg", format='png')      
     return send_file(image_stream, mimetype='image/png')
 
 

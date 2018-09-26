@@ -15,6 +15,6 @@ class ImageData:
     def __init__(self, image_array: np.ndarray)->None:
         self.image_array = image_array
         self.image = Image.fromarray(self.image_array, "RGB")
-        self.thumbnail = self.image.thumbnail (THUMBNAIL_SIZE)
-
+        self.thumbnail = self.image.copy()
+        self.thumbnail.thumbnail(THUMBNAIL_SIZE)
 
