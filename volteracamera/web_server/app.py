@@ -1,3 +1,6 @@
+"""
+Routes for general file access, main index page and sidebar loading.
+"""
 from flask import (
     Blueprint, 
     render_template, 
@@ -8,6 +11,8 @@ from flask import (
     send_file
     )
 from io import BytesIO
+import zipfile
+import tempfile
 
 from . import get_data_store
 
@@ -39,14 +44,13 @@ def capture_image_thumb(num):
     return the capture image thumbnail at location num
     """
     image_data = get_data_store()["images"]
-    if len(image_data) < int(num):
+    if len(image_data) <= int(num):
         return make_response ("Not enough images available", 404)
 
     image_stream = BytesIO()
-    print (image_data[int(num)].thumbnail)
-    image_data[int(num)].thumbnail.save(image_stream, format='png')       
+    image_data[int(num)].thumbnail.save(image_stream, format='jpeg')       
     image_stream.seek(0)
-    return send_file(image_stream, mimetype='image/png')
+    return send_file(image_stream, mimetype='image/jpeg')
 
 @bp.route("/capture_image_full/<num>")
 def capture_image_full(num):
@@ -54,13 +58,41 @@ def capture_image_full(num):
     return the full size captured image at location num
     """
     image_data = get_data_store()["images"] 
-    if len(image_data) < int(num):
+    if len(image_data) <= int(num):
         return make_response ("Not enough images available", 404)
 
     image_stream = BytesIO()
-    image_data[int(num)].image.save(image_stream, format='png') 
+    image_data[int(num)].image.save(image_stream, format='jpeg') 
     image_stream.seek(0)
-    #image_data[int(num)].image.save("out.jpg", format='png')      
-    return send_file(image_stream, mimetype='image/png')
+    return send_file(image_stream, mimetype='image/jpeg')
 
-
+@bp.route("/delete_image/<num>")
+def delete_image(num):
+    """
+    remove an image from the global data list.
+    """
+    image_data = get_data_store()["images"]
+    if len(image_data) <= int(num):
+        return "FAIL"
+    del image_data[int(num)]
+    return "OK"
+     
+def save_all():
+    """
+    save all the images to a zip file and return that file.
+    """
+    data = get_data_store()
+    image_data = data["images"]
+    with tempfile.NamedTemporaryFile("") as fid:
+        with zipfile.ZipFile(fid) as zipped:
+            for i, image in enumerate (image_data):
+                stream = BytesIO()
+                image.image.save(image_stream, format='jpeg')
+                image_stream.seek(0)
+                zipped.writestr(str(i) + ".jpeg", image_stream)
+            if data["intrinsics"]:
+                zipped.writestr("intrinsics.json", data["intrinsics"])
+            if data["distortion"]:
+                zipped.writestr("distortion.json", data["distortion"]) 
+        return send_file(fid.name, mimetype='application/zip')
+    return make_response ("Unable to save data zip.", 500)

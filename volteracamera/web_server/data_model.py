@@ -5,7 +5,7 @@ This class handles storing image data, thumbnails and associated analysis data f
 import numpy as np
 from PIL import Image
 
-THUMBNAIL_SIZE=(128, 128)
+THUMBNAIL_SIZE=200, 200
 
 class ImageData:
     """
@@ -16,5 +16,5 @@ class ImageData:
         self.image_array = image_array
         self.image = Image.fromarray(self.image_array, "RGB")
         self.thumbnail = self.image.copy()
-        self.thumbnail.thumbnail(THUMBNAIL_SIZE)
+        self.thumbnail.thumbnail(THUMBNAIL_SIZE, Image.ANTIALIAS)
 

@@ -20,13 +20,12 @@ function closeNav() {
 
 
 window.loadSidebar = loadSidebar;
-export function loadSidebar (sidebar_element) {
+export function loadSidebar () {
 
   var url_sidebar = "/load_sidebar";
-  var sidebar = sidebar_element;
+  var sidebar = document.getElementById('image-sidebar-contents');
   //Clear out the existing elements.
   while (sidebar.firstChild) {
-    console.log ("Clearing sidebar")
     sidebar.removeChild(sidebar.firstChild);
   }
 
@@ -36,21 +35,26 @@ export function loadSidebar (sidebar_element) {
       response.json().then(
         function (data) {
 
-          console.log(data);
-          data["images"].forEach(function(image) {
-            console.log (image.image)
-            var divElement = new document.createElement("div");
-            divElement.setAttribute("id", "sidebar_image")    
-            var aElement = new document.createElement("a");
-            aElement.setAttribute("href", image.image);
-            var imageElement = new document.createElement("img")
-            imageElement.setAttribute ("src", image.thumbnail);
+          
+          for (let i = 0; i < data["images"].length; ++i) {
+            var divElement = document.createElement("div");
+            divElement.setAttribute("id", "sidebar_image");
+            var removeImage = document.createElement("a");
+            removeImage.setAttribute ("href", "#");
+            removeImage.onclick = function () {deleteImage(i)};
+            removeImage.innerHTML = "&#10005";
+            var aElement = document.createElement("a");
+            aElement.setAttribute("href", data["images"][i].image);
+            var imageElement = document.createElement("img")
+            imageElement.setAttribute ("src", data["images"][i].thumbnail);
+            imageElement.setAttribute ("style", "width: 100%");
 
+            divElement.appendChild( removeImage );
             aElement.appendChild( imageElement );
             divElement.appendChild( aElement );
             sidebar.appendChild( divElement );
     
-          })
+          }
           openNav();
         });
     }).catch (  
@@ -60,8 +64,13 @@ export function loadSidebar (sidebar_element) {
 
 }
 
+function deleteImage (num) {
+  var url = "/delete_image/" + num;
+  fetch (url); //don't need to do anything with the response.
+  loadSidebar();
+};
 
-var sidebar_element = document.getElementById('image-sidebar-contents');
-loadSidebar(sidebar_element); 
+
+loadSidebar(); 
 
 

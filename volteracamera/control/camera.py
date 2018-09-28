@@ -12,6 +12,7 @@ picam_spec = importlib.util.find_spec("picamera")
 picam_found = picam_spec is not None
 if picam_found:
     from picamera import PiCamera
+    import picamera.array
 
 
 RESOLUTION = (1280,720)
@@ -64,13 +65,14 @@ class Camera(object):
 
     def capture_array(self)->np.ndarray:
         """
-        Return a 3 channel np.array (RGB)
+        Return a 3 channel np.array (RGB) DOES NOT WORK, OUT OF MEMORY ERROR in camera, need to use video channel.
         """
-        output = np.empty((RESOLUTION[1], RESOLUTION[0], 3), dtype=np.uint8)
+        output = picamera.array.PiRGBArray (self.camera, size=RESOLUTION)
         if picam_found: 
             with self.capture_lock:
+                print ("Grabbing...")
                 self.camera.capture(output, format="rgb")
-        return output
+        return output.array
 
     def open(self):
         """

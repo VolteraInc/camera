@@ -26,7 +26,7 @@ def controls():
 def preview_cam_image():
     cam = get_cam()
     image_stream = cam.capture_stream()
-    return send_file(image_stream, mimetype='image/png')
+    return send_file(image_stream, mimetype='image/jpeg')
 
 #Capture an image and store it in the request structure
 @bp.route('/capture_proper_image')

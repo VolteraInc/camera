@@ -12,6 +12,7 @@ function captureImage() {
     function(response) {
       if(response.ok) {
         let sidebar_element = document.getElementById('image-sidebar-contents');
+        console.log(sidebar_element)
         loadSidebar(sidebar_element)
         loader.start()
       } else {
