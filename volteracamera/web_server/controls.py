@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, send_file, request, jsonify
 
+from ..control.camera import CameraReader
 from . import get_cam, get_laser, get_data_store
 from .data_model import ImageData
+from io import BytesIO
 
 bp = Blueprint("controls", __name__, url_prefix="/controls")
 
@@ -24,8 +26,12 @@ def controls():
 #Requests for preview image data.
 @bp.route('/preview_cam_image')
 def preview_cam_image():
-    cam = get_cam()
-    image_stream = cam.capture_stream()
+    cam = CameraReader()
+    image_array = cam.capture()
+    image = CameraReader.array_to_image(image_array)
+    image_stream = BytesIO()
+    image.save (image_stream, format="jpeg")
+    image_stream.seek(0)
     return send_file(image_stream, mimetype='image/jpeg')
 
 #Capture an image and store it in the request structure
@@ -34,8 +40,8 @@ def capture_proper_image():
     """
     Capture a full size image and store it to the local store.
     """
-    cam = get_cam()
-    image_array = cam.capture_array()
+    cam = CameraReader()
+    image_array = cam.capture()
     data = get_data_store()
     data["images"].append(ImageData(image_array))
     return "OK"

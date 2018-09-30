@@ -40,6 +40,24 @@ def get_data_store():
     global data
     return data
 
+def initialize():
+    #Instantiate and start the camera
+    cam = get_cam()
+    cam.run()
+    #Intantiate and start the laser
+    laser = get_laser()
+
+# prevent cached responses
+def add_header(r):
+    """
+    Add headers to both disable page caching.
+    """
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r
+
 def create_app(test_config=None):
     """
     create and configure the app
@@ -69,4 +87,6 @@ def create_app(test_config=None):
     application.register_blueprint(controls.bp)
     application.register_blueprint(calibration.bp)
 
+    application.before_first_request (initialize)
+    application.after_request (add_header)
     return application

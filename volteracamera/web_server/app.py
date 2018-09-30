@@ -94,5 +94,7 @@ def save_all():
                 zipped.writestr("intrinsics.json", data["intrinsics"])
             if data["distortion"]:
                 zipped.writestr("distortion.json", data["distortion"]) 
+            if data["laser-plane"]:
+                zipped.writestr("laser-plane.json", data["laser-plane"]) 
         return send_file(fid.name, mimetype='application/zip')
     return make_response ("Unable to save data zip.", 500)
