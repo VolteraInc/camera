@@ -1,0 +1,30 @@
+<!DOCTYPE html >
+
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+#image-div {
+  height: 400px;
+  width: 400px;
+}
+
+</style>
+</head>
+<body>
+<h1>Calibration Image {{ num }} </h1>
+
+{% if previous_url not None %}
+<a href="{{ previous_url }}">/<</a>
+{% endif %}
+{% if next_url not None %}
+<a href="{{ next_url }}">/></a>
+{% endif %}
+<div id="image-div"> 
+<img src="{{ image_url }}"\>
+</div>
+
+</body>
+</html>
+
+

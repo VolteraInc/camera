@@ -7,7 +7,7 @@
 {% block content %}
 <p>There are several options for calibration:</p>
 <ul>
-<li> <a href="{{ url_for('calibration.intrinsics_generate') }}">Generate Intrinsics</a> - Generate an intrinsics dataset to show on a small LCD.
+<li> <a href="{{ url_for('calibration.intrinsics_pages', num=0) }}">Generate Intrinsics</a> - Generate an intrinsics dataset to show on a small LCD.
 <li> <a href="{{ url_for('calibration.intrinsics_analyze') }}">Analyze Intrinsics</a> - Analyze a collected set of camera calibration images to get the intrinsics.
 <li> <a href="{{ url_for('calibration.laser_analyze') }}">Analyze Laser Images</a> - Analyze a set of laser images to get the laser calibraion.
 </ul>

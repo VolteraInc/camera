@@ -13,7 +13,7 @@ BOARD = aruco.CharucoBoard_create(5,5,.025,.0125,DICTIONARY)
 IMG = BOARD.draw((150,150))
 
 #Dump the calibration board to a file
-cv2.imwrite('charuco.png',IMG)
+#cv2.imwrite('charuco.png',IMG)
 
 def analyze_calibration_image(image: np.ndarray, display=False)->tuple:
     """

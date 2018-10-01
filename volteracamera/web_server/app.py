@@ -76,25 +76,21 @@ def delete_image(num):
         return "FAIL"
     del image_data[int(num)]
     return "OK"
-     
+    
+@bp.route("/save_data.zip") 
 def save_all():
     """
     save all the images to a zip file and return that file.
     """
     data = get_data_store()
     image_data = data["images"]
-    with tempfile.NamedTemporaryFile("") as fid:
-        with zipfile.ZipFile(fid) as zipped:
-            for i, image in enumerate (image_data):
-                stream = BytesIO()
-                image.image.save(image_stream, format='jpeg')
-                image_stream.seek(0)
-                zipped.writestr(str(i) + ".jpeg", image_stream)
-            if data["intrinsics"]:
-                zipped.writestr("intrinsics.json", data["intrinsics"])
-            if data["distortion"]:
-                zipped.writestr("distortion.json", data["distortion"]) 
-            if data["laser-plane"]:
-                zipped.writestr("laser-plane.json", data["laser-plane"]) 
-        return send_file(fid.name, mimetype='application/zip')
-    return make_response ("Unable to save data zip.", 500)
+    file_object = BytesIO()
+    with zipfile.ZipFile(file_object, 'w') as zipped:
+        for i, image in enumerate (image_data):
+            image_stream = BytesIO()
+            image.image.save(image_stream, format='jpeg')
+            image_stream.seek(0)
+            zipped.writestr(str(i) + ".jpeg", image_stream.getvalue())
+    file_object.seek(0)
+    return send_file(file_object, mimetype='application/x-zip-compressed')
+

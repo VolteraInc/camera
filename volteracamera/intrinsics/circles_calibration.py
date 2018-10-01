@@ -52,7 +52,7 @@ def generate_symmetric_circle_grid (size_x: int, size_y: int, circle_spacing: in
 IMG, OBJECT_POINTS, PATTERN_SIZE = generate_symmetric_circle_grid(5, 4, 150)
 
 #Dump the calibration board to a file
-cv2.imwrite('symmetric.png',IMG)
+#cv2.imwrite('symmetric.png',IMG)
 
 def analyze_calibration_image(image: np.ndarray, display=False)->tuple:
     """

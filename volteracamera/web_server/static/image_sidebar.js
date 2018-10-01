@@ -34,8 +34,6 @@ export function loadSidebar () {
     function (response ) {
       response.json().then(
         function (data) {
-
-          
           for (let i = 0; i < data["images"].length; ++i) {
             var divElement = document.createElement("div");
             divElement.setAttribute("id", "sidebar_image");
@@ -55,7 +53,13 @@ export function loadSidebar () {
             sidebar.appendChild( divElement );
     
           }
-          openNav();
+
+          if (data["images"].length > 0) {
+            var saveElement = document.createElement("a");
+            saveElement.innerHTML = "Save Images";
+            saveElement.href = "/save_data.zip";
+            sidebar.appendChild ( saveElement );
+          }  
         });
     }).catch (  
     function (error) {  
