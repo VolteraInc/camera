@@ -4,25 +4,29 @@
 <head>
 <meta charset="utf-8"/>
 <style>
-#image-div {
-  height: 400px;
-  width: 400px;
+img {
+  height: 150px;
+  width: 150px;
 }
-
+font {
+  size: 7;
+}
 </style>
 </head>
 <body>
-<h1>Calibration Image {{ num }} </h1>
+<a href={{ url_for("calibration.index") }}>return</a>
 
-{% if previous_url not None %}
-<a href="{{ previous_url }}">/<</a>
+<span>
+{% if previous_url != None %}
+<a href="{{ previous_url }}"><</a>
 {% endif %}
-{% if next_url not None %}
-<a href="{{ next_url }}">/></a>
+
+<img src="{{ image_url }}" class="center">
+
+{% if next_url != None %}
+<a href="{{ next_url }}">></a>
 {% endif %}
-<div id="image-div"> 
-<img src="{{ image_url }}"\>
-</div>
+</span>
 
 </body>
 </html>

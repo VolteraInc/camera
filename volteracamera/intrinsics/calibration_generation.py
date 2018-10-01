@@ -34,7 +34,10 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     norm = np.sqrt(np.dot (rvec, rvec))
     axis = rvec/norm
     rot_matrix = tfd.axangles.axangle2mat(axis, norm)
-    width, height, _ = image.shape
+    if len(image.shape) == 3:    
+        width, height, _ = image.shape
+    else:
+        width, height = image.shape 
     center = np.array([width/2, height/2, 0])
     f = 250
     cam_matrix = np.array([[f, 0, center[0]],
