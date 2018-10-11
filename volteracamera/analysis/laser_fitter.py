@@ -1,6 +1,11 @@
 """
 This module handles performing the laser plane fitting given a set of camera intrinsics 
 and laser intersection points.
+
+Since the exact location of the laser planes is unknown, the fitting must minimize for two parameters. The first is the offset of the calibrtion planes (for now assumed normal to the sensor) and the second is the transformation of that generates the laser plane. 
+
+The minimization takes place in two steps. In the first, for each set of data, the line of intersection of the laser plane and the calibration plane is calculated. Then, for each ij point, the minimum distance between the intersection line and the laser plane is calculated. For a perfect fit, the distance between the ray and line should be 0 (they cross). The laser plane transform and the calibration plane offset are then iterated to give the minimal total offset of every point and every plane.
+
 """
 import numpy as np
 import transforms3d as tfd
@@ -48,10 +53,10 @@ class LaserFitter(object):
 
         self.plane_distance = relative_distances
 
-    def _calculate_residual(self):
+    def _calculate_residual(self)
         """
         For a single i, j point, calculate the reprojection error and return the
-        difference between the meausred point and the associated reprojected point.
+        difference between the meausured point and the associated reprojected point.
         """
 
     def process(self):
