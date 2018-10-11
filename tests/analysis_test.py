@@ -38,5 +38,3 @@ def test_plane_initialization_bad_normal():
     with pytest.raises(ZeroDivisionError):
         Plane(normal = [0, 0, 0]) 
 
-   
-

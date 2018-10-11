@@ -3,6 +3,8 @@ This class is used to represent a plane given a point on the plane and a normal.
 """
 import numpy as np
 
+from .transform import Transform
+
 class Plane (object):
     """
     This class is used to represent a plane given a point on the plane and a surface normal.
@@ -35,4 +37,11 @@ class Plane (object):
             raise ZeroDivisionError("Normal is too close to 0.")
         self.normal /= denominator
 
-
+    def transform (self, transform : Transform):
+        """
+        Apply the given transform the the plane.
+        """
+        if not isinstance (transform, Transform):
+            raise TypeError("Input to transform must be of type Transform")
+        self.point = transform.transform_point(self.point)
+        self.normal = transform.transform_normal(self.normal) 
