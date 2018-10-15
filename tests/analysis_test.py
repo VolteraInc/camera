@@ -17,7 +17,7 @@ def test_good_initialization():
     """
     Test initializer with non-default values.
     """
-    plane = Plane(point_on_plane = [1.0, 1.1, 1.2], normal = [1., -1., 0.])
+    plane = Plane(point_on_plane = np.array([1.0, 1.1, 1.2]), normal = np.array([1., -1., 0.]))
     assert [1.0, 1.1, 1.2] == pytest.approx(plane.point)
     assert [1.0/np.sqrt(2), -1.0/np.sqrt(2), 0.0] == pytest.approx(plane.normal)
 
