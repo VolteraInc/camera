@@ -17,11 +17,13 @@ if picam_found:
 
 CAMERA_INTERFACE="ipc:///tmp/camera_thread"
 
+#RESOLUTION = (2592, 1944)
+#RESOLUTION = (3280, 2464)
 RESOLUTION = (1280,720)
 ZOOM = (320/1920, 180/1080, 1280/1920, 720/1080)
 AWB_MODE = "off"
 AWB_GAINS = 1.6
-FRAMERATE = 30
+FRAMERATE = 10
 SHUTTER_SPEED = 5000
 EXPOSURE_MODE = "off"
 
@@ -36,15 +38,15 @@ class Camera(object):
         """
         if picam_found:
             print ("Starting Camera")
-            self.camera = PiCamera(sensor_mode = 1)
+            self.camera = PiCamera()
             self.camera.resolution = RESOLUTION
-            self.camera.zoom = ZOOM
+            #self.camera.zoom = ZOOM
             self.camera.awb_mode = AWB_MODE
             self.camera.awb_gains = AWB_GAINS
             self.camera.framerate = FRAMERATE
             #time.sleep(3)
-            self.camera.shutter_speed = SHUTTER_SPEED
-            self.camera.exposure_mode = EXPOSURE_MODE
+            #self.camera.shutter_speed = SHUTTER_SPEED
+            #self.camera.exposure_mode = EXPOSURE_MODE
             
             #set up zmq context and publishing port. Only works on Unix like systems.
             self.context = zmq.Context()
