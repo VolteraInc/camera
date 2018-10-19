@@ -23,9 +23,9 @@ class Line (object):
 
         This raises a type error if the inputs are 3-vectors.
         """ 
-        if not point:
+        if point is None:
             point = [0., 0. ,0.]
-        if not direction:
+        if direction is None:
             direction = [0., 0., 1.]
         if len(point) != 3:
             raise TypeError("Line point must be a 3 vector")

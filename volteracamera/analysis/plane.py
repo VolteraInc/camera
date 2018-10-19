@@ -3,6 +3,7 @@ This class is used to represent a plane given a point on the plane and a normal.
 """
 import numpy as np
 import math
+from .line import Line
 
 class Plane (object):
     """
@@ -133,6 +134,10 @@ class Plane (object):
     
         Raises Runtime Error if the line and plane are perpendicular (no solution)
         Raises TypeError if other is not a line type.
+
+        For a given line given by p0 + t*dirn = p, we can sub in to the plane equation and then solve for t.
+
+        t = n . (pp - pl)/(n . dirn_line)
         """
         if not isinstance (other, Line):
             raise TypeError("Only a Line can intersect a plane at a point.")
@@ -141,5 +146,9 @@ class Plane (object):
 
         if math.isclose(norm, 0.0):
             raise RuntimeError ("Line and plane are perpendicular, no intersection.")
+
+        t = np.dot( self.normal, (self.point - other.point) ) / norm
+
+        return other.point + t*other.direction 
 
         

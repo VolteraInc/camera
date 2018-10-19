@@ -43,7 +43,14 @@ def test_line_from_two_planes_working():
     """
     Test the generation of a line from two planes.
     """
-    assert False
+    plane1 = Plane([0, 0, 0], [0, 0, 1])
+    plane2 = Plane([0, 0, 0], [1, 0, 0])
+
+    line = plane1.intersection_line(plane2)
+
+    assert [0, 1, 0] == pytest.approx(line.direction)
+    assert [0, 0, 0] == pytest.approx(line.point)
+
 
 def test_line_from_two_planes_parallel():
     """
@@ -67,6 +74,28 @@ def test_line_from_two_planes_invalid_input():
     with pytest.raises(TypeError):
         plane.intersection_line("not a plane")
 
+def test_point_from_line_plane_parallel():
+    """
+    Check that a runtime error is raised if the line lies in the plane.
+    """
+    plane = Plane()
+    line = Line([0, 0, 0], [1, 0, 0])
+    with pytest.raises(RuntimeError):
+        plane.intersection_point (line)
 
+def test_point_from_line_plane_bad_input():
+    """
+    Test bad inputs to line plane intersection
+    """
+    plane = Plane()
+    with pytest.raises(TypeError):
+        plane.intersection_point ("not a line.")
 
+def test_point_from_line_plane_good():
+    """
+    Test that line/plane intersection.
+    """
+    plane = Plane ([1, 1, 10], [0, 0, 1])
+    line = Line([1, 1, 0], [1, 1, 1])
 
+    assert pytest.approx(plane.intersection_point(line)) == [11, 11, 10]
