@@ -36,7 +36,6 @@ class Plane (object):
     def __repr__(self):
         return str(self.__dict__)
 
-    
     def _normalize(self)->None:
         """
         Normalize the plane.
