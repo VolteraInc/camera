@@ -101,5 +101,5 @@ if __name__ == "__main__":
         if args.output_file:
             with open(args.output_file, "a") as fid:
                 for point in data_points:
-                    fid.write(f"{image_count}, {point[0]}, {point[1]}, {point[2]}\n")
+                    fid.write("{}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2]))
         image_count += 1

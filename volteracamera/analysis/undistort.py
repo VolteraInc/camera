@@ -37,11 +37,11 @@ class Undistort (object):
     def __repr__(self):
         return str(self.__dict__)
 
-    def _undistort_point (self, point_2d ):
+    def _undistort_points (self, points_2d ):
         """
         Undistort a single point.
         """
-        return cv2.undistortPoints(point_2d, self.camera_matrix, self.distortion)
+        return cv2.undistortPoints(np.asarray(points_2d, dtype=np.float32), self.camera_matrix, self.distortion)
 
     def undistort_image (self, image ):
         """
@@ -49,24 +49,23 @@ class Undistort (object):
         """
         return cv2.undistort(image, self.camera_matrix, self.distortion)
 
-    def _project_point (self, point_2d_undistorted ):
+    def _project_points (self, points_2d_undistorted ):
         """
         Return the ray in 3d given the 2 point.
         """
-        if len(point_2d_undistorted) != 2:
-            return TypeError("only a 2d point can be projected")
         fx = self.camera_matrix[0, 0]
         fy = self.camera_matrix[1, 1]
         cx = self.camera_matrix[0, 2]
         cy = self.camera_matrix[1, 2]
-        return np.asarray([(u - cx ) / fx, ( v - cy ) / fy, 1.0])
+        return [np.asarray([(point[0][0] - cx ) / fx, ( point[0][1] - cy ) / fy, 1.0]) for point in points_2d_undistorted]
+            
 
-    def get_ray_from_point (self, point_2d):
+    def get_rays_from_points (self, points_2d):
         """
         Given an image point, undistort and project it.
         """
-        point_undistorted = self._undistort_point(point_2d)
-        return self._project_point(point_undistorted)
+        points_undistorted = self._undistort_points(points_2d)
+        return self._project_points(points_undistorted)
 
     def write_file(self, filename):
         """
