@@ -10,6 +10,8 @@ The minimization takes place in two steps. In the first, for each set of data, t
 import numpy as np
 import transforms3d as tfd
 
+from scipy.optimize import least_squares
+
 from .undistort import Undistort
 
 DISTANCE_TO_SURFACE = 0.015
@@ -22,6 +24,18 @@ MEASURED_PLANE_NORMAL = [0, 0, -1.0] #Assume the target planes are normal to the
 
 INITIAL_ROTATION = [-np.pi*3/4, 0, 0]
 INITIAL_POSITON = [0.0, -0.0075, 0.0075]
+
+#parameter locations for each fitted parameter
+LP_RX = 0
+LP_RY = 1
+LP_RZ = 2
+LP_OFFSET_Z = 3
+CAL_PLANE_RX = 4
+CAL_PLANE_RY = 5
+CAL_PLANE_RZ = 6
+CAL_PLANE_OFFSET_Z = 7
+INITIAL_PARAMS = [ np.sin(45 * np.pi / 180, 0, 0, 0.03, 0, 0, 0, 0.04 ]
+
 
 class LaserFitter(object):
     """
@@ -38,29 +52,46 @@ class LaserFitter(object):
         """
         if not isinstance (undistort, Undistort):
             raise RuntimeError ("Must provide an instance of the undistortion class.")
-        if len(distortion) != 5:
-            raise RuntimeError ("Not enough distortion parameters")
         if len(laser_intersections) != len(relative_distances): 
             raise RuntimeError("The number point datasets must equal the number of
                                 plane intersection distances.")
         if len(relative_distances) < 2:
             raise RuntimeError("Need at least 2 datasets to fit a plane.")
 
-        self.points = []
+        self.rays = []
         for a_set in laser_intersections:
             points = [(i, j) for i, j in enumerate (a_set)]
-            self.points.append(undistort.undistort_points(points))
+            for point in points
+                self.rays.append(undistort.get_ray_from_point(point))
 
         self.plane_distance = relative_distances
 
-    def _calculate_residual(self)
+    @staticmethod
+    def _calculate_residual(params, undistort, point_set, plane_offsets)
         """
         For a single i, j point, calculate the reprojection error and return the
         difference between the meausured point and the associated reprojected point.
         """
 
+        laser_rot = [params[LP_RX], params[LP_RY], param[LP_RZ]]
+        laser_point = [0, 0, param[LP_OFFSET_Z]]
+        laser_transform = Transform (rotation = laser_rot, translation = laser_rot)
+        laser_plane = laser_transform.transform_plane(Plane()) 
+        planes_rot = [CAL_PLANE_RX, CAL_PLANE_RY, CAL_PLANE_RZ]
+        planes_point = [0, 0, CAL_PLANE_OFFSET_Z]
+        planes_transform = Transform(rotation=planes_rot, translation = planes_rot)
+        target_planes = [transform.transform_plane(Plane(point=[0, 0, offset]) for offset in plane_offsets]
+        intersection_lines = [laser_plane.intersection_line(plane) for plane in target_planes]
+        residual = 0.0
+        for points, line in zip(point_set, intersection_lines):
+            residual += sum([line.distance_to( Line(direction=point) )**2 for point in points])
+        return residual
+
+         
     def process(self):
         """
         Run the minimization. 
         """
+        res = least_squares (LaserFitter._calculate_residual, INITIAL_PARAMS, args=(self.undistort, self.rays, self.plane_distance), verbose=2)
 
+        return res

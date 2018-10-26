@@ -3,6 +3,7 @@ This class is used to represent a plane given a point on the plane and a normal.
 """
 import numpy as np
 import math
+import json
 from .line import Line
 
 class Plane (object):
@@ -14,6 +15,7 @@ class Plane (object):
         """
         constructor, default point at 0 and plane normal in the positive z direction
         """
+        self.__plane__ = True
         if point_on_plane is None:
             point_on_plane = [0., 0., 0.]
         if normal is None:
@@ -151,4 +153,47 @@ class Plane (object):
 
         return other.point + t*other.direction 
 
-        
+    def write_file(self, filename):
+        """
+        save json file
+        """
+        with open(str(filename), 'w') as write_file:
+            json.dump(self, write_file,
+                      default=encode_plane_settings,
+                      indent=4,
+                      sort_keys=True)   
+
+    @staticmethod
+    def read_json_file(filename):
+        """
+        read the contents of a json file.
+        """
+        string_file = str(filename)
+        with open(string_file, 'r') as read_file:
+            return json.load(read_file, object_hook=decode_plane_settings)
+
+def encode_plane_settings(settings):
+    """
+    encode the plane object as a jason file.
+    """
+    #pylint: disable=consider-merging-isinstance
+    if isinstance(settings, Plane):
+        return settings.__dict__
+    elif isinstance(settings, np.ndarray):
+        return settings.tolist()
+    else:
+        type_name = settings.__class__.__name__
+        raise TypeError("Object of type '{type_name}' is not JSON" \
+                         "serializable".format(type_name=type_name))
+
+def decode_plane_settings(settings):
+    """
+    decode the plane object from a json file.
+    """
+    if '__plane__' in settings:
+        plane = Plane(
+            point_on_plane = settings["point"],
+            normal = settings["normal"])
+        return plane
+
+    return None 

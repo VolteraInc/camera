@@ -2,6 +2,7 @@
 Tests for the analysis plane class.
 """
 import pytest
+import tempfile
 import numpy as np
 from volteracamera.analysis.plane import Plane
 from volteracamera.analysis.line import Line
@@ -99,3 +100,18 @@ def test_point_from_line_plane_good():
     line = Line([1, 1, 0], [1, 1, 1])
 
     assert pytest.approx(plane.intersection_point(line)) == [11, 11, 10]
+
+def test_file_saving_loading():
+    """
+    Test the file saving and loading.
+    """
+    with tempfile.NamedTemporaryFile() as fid:
+        plane = Plane(point_on_plane = np.array([1.0, 1.1, 1.2]), normal = np.array([1., -1., 0.]))
+        plane.write_file(fid.name)
+        new_object = Plane.read_json_file(fid.name)
+        assert isinstance (new_object, Plane)
+        assert [1.0, 1.1, 1.2] == pytest.approx(new_object.point)
+        assert [1.0/np.sqrt(2), -1.0/np.sqrt(2), 0.0] == pytest.approx(new_object.normal)
+
+  
+
