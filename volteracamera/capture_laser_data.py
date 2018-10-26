@@ -2,7 +2,7 @@
 Run the laser capture program (assuming the camera/laser are already running on the web sever or with the run_camera script.
 """
 import argparse
-
+import sys
 from .analysis.undistort import Undistort
 from .analysis.plane import Plane
 from .analysis.point_projector import PointProjector 
@@ -10,38 +10,48 @@ from .analysis.laser_line_finder import LaserLineFinder
 from .control.camera import CameraReader
 
 
-#modified from https://stackoverflow.com/questions/5179589/continuous-3d-plotting-i-e-figure-update-using-python-matplotlib
-
-import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FixedLocator, FormatStrFormatter
 import matplotlib
 
 DATA_BUFFER_SIZE = 100
+SWEEP_DISTANCE = 0.001
 
-class plot3dScatterClass( object ):
+class Plot3dScatterClass( object ):
 
     def __init__( self ):
+        """
+        Set up the initial plot.
+        """
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot( 111, projection='3d' )
-
-        self.ax.w_zaxis.set_major_locator( LinearLocator( 10 ) )
-        self.ax.w_zaxis.set_major_formatter( FormatStrFormatter( '%.03f' ) )
         self.marker = "o"
         self.color = "r" 
         self.plot.scatter ([0], [0], [0])
         plt.draw()
 
-    def draw_now( self, xs, ys, zs ):
+    def draw_swept(self, data_list):
+        """
+        take the data as input and put it into the correct format, and sweep it across to aid in visualization.
+        """
+        xs = []
+        yx = []
+        zs = []
+        
+        for count, a_list in enumerate(data_list):
+            for point in a_list:
+                xs.append(point[0])
+                ys.append(point[1] + SWEEP_DISTANCE*0.001)
+                zs.append(point[2])
+        
+        self.draw_now(xs, ys, zs)
 
+    def draw_now( self, xs, ys, zs ):
+        """
+        Update thee plot given properly formatted x, y, z lists.
+        """
         self.plot.remove()
         self.plot = ax.scatter(xs, ys, zs, c=self.color, marker=self.marker)
-        
-        #self.surf = self.ax.plot_surface( 
-        #    self.X, self.Y, heightR, rstride=1, cstride=1, 
-        #    cmap=cm.jet, linewidth=0, antialiased=False )
         plt.draw()                      # redraw the canvas
 
 matplotlib.interactive(True)
@@ -69,7 +79,12 @@ if __name__ == "__main__":
 
     cam_reader = CamReader()
 
-    data_buffer = []
+    #conditional setup for displaying data.
+    if args.display:
+        data = []
+        plotter = Plot3dScatterClass()
+
+    image_count = 0
     while (True):
         image = cam_reader.capture()
         
@@ -77,3 +92,14 @@ if __name__ == "__main__":
 
         data_points = [point_projector.project (point) for point in image_points]
 
+        if args.display:
+            data.append(data_points)
+            if len(data) > DATA_BUFFER_SIZE:
+                data = data[(DATA_BUFFER_SIZE-len(data)):] #much more efficient than pop.
+            plotter.draw_swept(data)
+
+        if args.output_file:
+            with open(args.output_file, "a") as fid:
+                for point in data_points:
+                    fid.write(f"{image_count}, {point[0]}, {point[1]}, {point[2]}\n")
+        image_count += 1
