@@ -29,6 +29,13 @@ class Plane (object):
         self.point = np.asarray(point_on_plane)
         self.normal = np.asarray(normal)
         self._normalize()
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return str(self.__dict__)
+
     
     def _normalize(self)->None:
         """

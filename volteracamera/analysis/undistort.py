@@ -31,6 +31,12 @@ class Undistort (object):
         self.camera_matrix = camera_matrix
         self.distortion = np.asarray(distortion)
 
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return str(self.__dict__)
+
     def _undistort_point (self, point_2d ):
         """
         Undistort a single point.

@@ -3,7 +3,7 @@ Tools for Generating and calibrating with sphere images.
 """
 import cv2
 import numpy as np
-
+from ..analysis.undistort import Undistort
 
 def generate_asymmetric_circle_grid (size_x: int, size_y: int, circle_spacing: int )->tuple:
     """
@@ -109,7 +109,7 @@ def run_calibration(image_list: list)->tuple:
     all_corners = np.asarray(all_corners).astype('float32')
     ret, camera_matrix, distortion, rvecs, tvecs = cv2.calibrateCamera(object_points, all_corners, image_size,None,None)
 
-    return (camera_matrix, distortion) #rvecs, tvecs, calibration[3], calibration[4])
+    return Undistort(camera_matrix, distortion) #rvecs, tvecs, calibration[3], calibration[4])
 
 
 

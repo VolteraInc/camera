@@ -7,6 +7,7 @@ http://answers.opencv.org/question/98447/camera-calibration-using-charuco-and-py
 import cv2
 import cv2.aruco as aruco
 import numpy as np
+from ..analysis.undistort import Undistort
 
 DICTIONARY = aruco.getPredefinedDictionary(aruco.DICT_5X5_50)
 BOARD = aruco.CharucoBoard_create(5,5,.025,.0125,DICTIONARY)
@@ -72,7 +73,7 @@ def run_calibration(image_list: list)->tuple:
     width, height, _ = image_size
     calibration = aruco.calibrateCameraCharuco(all_corners, all_ids, BOARD, (height, width), None, None)
 
-    return (calibration[1], calibration[2]) #rvecs, tvecs, calibration[3], calibration[4])
+    return Undistort(calibration[1], calibration[2]) #rvecs, tvecs, calibration[3], calibration[4])
 
 
 
