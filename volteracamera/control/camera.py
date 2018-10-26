@@ -48,14 +48,14 @@ class Camera(object):
             #self.camera.shutter_speed = SHUTTER_SPEED
             #self.camera.exposure_mode = EXPOSURE_MODE
             
-            #set up zmq context and publishing port. Only works on Unix like systems.
-            self.context = zmq.Context()
-            self.socket = self.context.socket(zmq.PUB)
-            self.socket.bind (CAMERA_INTERFACE)
+        #set up zmq context and publishing port. Only works on Unix like systems.
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PUB)
+        self.socket.bind (CAMERA_INTERFACE)
 
-            #set up the capture process
-            self.stop_capture = False
-            self.capture_process = Thread (target = self._capture_continuous)
+        #set up the capture process
+        self.stop_capture = False
+        self.capture_process = Thread (target = self._capture_continuous)
 
     def open(self):
         """

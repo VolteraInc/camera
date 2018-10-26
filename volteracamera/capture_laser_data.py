@@ -3,11 +3,11 @@ Run the laser capture program (assuming the camera/laser are already running on 
 """
 import argparse
 import sys
-from .analysis.undistort import Undistort
-from .analysis.plane import Plane
-from .analysis.point_projector import PointProjector 
-from .analysis.laser_line_finder import LaserLineFinder
-from .control.camera import CameraReader
+from volteracamera.analysis.undistort import Undistort
+from volteracamera.analysis.plane import Plane
+from volteracamera.analysis.point_projector import PointProjector 
+from volteracamera.analysis.laser_line_finder import LaserLineFinder
+from volteracamera.control.camera import CameraReader
 
 
 import matplotlib.pyplot as plt

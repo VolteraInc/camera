@@ -84,7 +84,7 @@ def _display_analyzed(image: np.ndarray, markers: np.ndarray )->None:
     cv2.waitKey()
     cv2.destroyAllWindows()
  
-def run_calibration(image_list: list)->tuple:
+def run_calibration(image_list: list, display : bool = False)->tuple:
     """
     Run the ChArUco calibration given a set of images (loaded into numpy arrays) 
     and return a tuple of the camera matrix, distortion parameters, rvecs and tvecs.
@@ -99,7 +99,7 @@ def run_calibration(image_list: list)->tuple:
     object_points = []
     for image in image_list:
         try:
-            current_corners = analyze_calibration_image(image)
+            current_corners = analyze_calibration_image(image, display)
             all_corners.append(current_corners)
             object_points.append(OBJECT_POINTS)
         except RuntimeError:
@@ -109,7 +109,7 @@ def run_calibration(image_list: list)->tuple:
     all_corners = np.asarray(all_corners).astype('float32')
     ret, camera_matrix, distortion, rvecs, tvecs = cv2.calibrateCamera(object_points, all_corners, image_size,None,None)
 
-    return Undistort(camera_matrix, distortion) #rvecs, tvecs, calibration[3], calibration[4])
+    return Undistort(camera_matrix, distortion[0]) #rvecs, tvecs, calibration[3], calibration[4])
 
 
 

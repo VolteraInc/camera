@@ -3,8 +3,8 @@ Run the camera/laser combo from the command line (rather than the web server.
 """
 import argparse
 
-from .control.camera import Camera
-from .control.laser import Laser
+from volteracamera.control.camera import Camera
+from volteracamera.control.laser import Laser
 
 
 laser = Laser()
