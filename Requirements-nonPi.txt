@@ -21,19 +21,19 @@ pexpect==4.6.0
 pickleshare==0.7.4
 Pillow==5.2.0
 pkg-resources==0.0.0
-pluggy==0.7.1
+pluggy==0.8.0
 prompt-toolkit==1.0.15
 ptyprocess==0.6.0
-py==1.6.0
+py==1.7.0
 Pygments==2.2.0
-pytest==3.8.2
+pytest==3.10.0
 pyzmq==17.1.2
 scipy==1.1.0
 simplegeneric==0.8.1
 six==1.11.0
 traitlets==4.3.2
 transforms3d==0.3.1
--e git+git@github.com:VolteraInc/camera.git@746ebcbb2c280867b728ae399bada099675f328f#egg=VolteraCamera
+-e git+git@github.com:VolteraInc/camera.git@dbd40ac9f4aa9dbe9fbd99a50f7987bb20920553#egg=VolteraCamera
 wcwidth==0.1.7
 Werkzeug==0.14.1
 zmq==0.0.0

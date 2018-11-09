@@ -62,7 +62,10 @@ def analyze_calibration_image(image: np.ndarray, display=False)->tuple:
 
     If the function can't find the pattern, it throws a runtime error.
     """
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    try:
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    except:
+        gray_image = image
     ret, centers = cv2.findCirclesGrid(gray_image, PATTERN_SIZE, flags=cv2.CALIB_CB_SYMMETRIC_GRID + cv2.CALIB_CB_CLUSTERING)
     if display:
         _display_analyzed (image, centers)
@@ -84,7 +87,7 @@ def _display_analyzed(image: np.ndarray, markers: np.ndarray )->None:
     cv2.waitKey()
     cv2.destroyAllWindows()
  
-def run_calibration(image_list: list, display : bool = False)->tuple:
+def run_calibration(image_list: list, display : bool = False, object_points_in : list = OBJECT_POINTS) -> tuple:
     """
     Run the ChArUco calibration given a set of images (loaded into numpy arrays) 
     and return a tuple of the camera matrix, distortion parameters, rvecs and tvecs.
@@ -101,7 +104,7 @@ def run_calibration(image_list: list, display : bool = False)->tuple:
         try:
             current_corners = analyze_calibration_image(image, display)
             all_corners.append(current_corners)
-            object_points.append(OBJECT_POINTS)
+            object_points.append(object_points_in)
         except RuntimeError:
             print ("Missed Image")
             pass

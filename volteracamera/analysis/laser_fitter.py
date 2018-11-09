@@ -18,7 +18,7 @@ from .plane import Plane
 from .line import Line
 
 DISTANCE_TO_SURFACE = 0.015
-LAYER_THICKNESS = 0.000127
+LAYER_THICKNESS = 0.0001651
 TAPE_LAYERS = np.arange (6, 0, -1) * LAYER_THICKNESS
 
 STARTING_LASER_PLANE_NORMAL = [0, 0, 1.0]
