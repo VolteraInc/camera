@@ -18,8 +18,8 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--sensorexposure", help = "Sensor exposure time in ms", type=int, default = 0)
     args = parser.parse_args()
 
-    laser.power(args.laserpower)
-    sensor.exposure(args.sensorexposure)
+    laser.power = args.laserpower
+    cam.exposure = args.sensorexposure
 
-    raw_input("Press any key to exit.")
+    input("Press any key to exit.")
 

@@ -37,11 +37,11 @@ class Undistort (object):
     def __repr__(self):
         return str(self.__dict__)
 
-    def _undistort_points (self, points_2d ):
+    def _undistort_points (self, points ):
         """
         Undistort a single point.
         """
-        return cv2.undistortPoints(np.asarray(points_2d, dtype=np.float32), self.camera_matrix, self.distortion)
+        return cv2.undistortPoints(np.asarray(points, dtype=np.float32), self.camera_matrix, self.distortion)
 
     def undistort_image (self, image ):
         """

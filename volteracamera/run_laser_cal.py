@@ -27,13 +27,13 @@ if __name__=="__main__":
 
     data_points_list = []
     distance_list = []
-    for count, an_image in enumerate(image_files):
-        image = cv2.imread(an_image)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        print ("Loaded " + an_image)
-        finder = LaserLineFinder(image)
-        data_points_list.append(finder.process())
-        distance_list.append(count * LAYER_THICKNESS)
+    with LaserLineFinder() as finder:
+        for count, an_image in enumerate(image_files):
+            image = cv2.imread(an_image)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            print ("Loaded " + an_image)
+            data_points_list.append(finder.process(image))
+            distance_list.append(count * LAYER_THICKNESS)
 
     undistort = Undistort.read_json_file(args.input_file)
     if not undistort:

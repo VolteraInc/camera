@@ -4,7 +4,6 @@ backcall==0.1.0
 click==6.7
 decorator==4.3.0
 Flask==1.0.2
-gpiozero==1.4.1
 ipython==6.5.0
 ipython-genutils==0.2.0
 itsdangerous==0.24
@@ -33,7 +32,6 @@ simplegeneric==0.8.1
 six==1.11.0
 traitlets==4.3.2
 transforms3d==0.3.1
--e git+git@github.com:VolteraInc/camera.git@dbd40ac9f4aa9dbe9fbd99a50f7987bb20920553#egg=VolteraCamera
 wcwidth==0.1.7
 Werkzeug==0.14.1
 zmq==0.0.0

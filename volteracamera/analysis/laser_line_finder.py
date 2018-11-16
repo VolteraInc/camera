@@ -19,31 +19,40 @@ class LaserLineFinder (object):
     bottom of the image)
     """
 
-    def __init__(self, image):
+    def __init__(self):
         """
         Take in a numpy array representing the grayscale image
         """
-        if (len(image.shape) != 2):
-            raise RuntimeError ("Grayscale images only.")
-        self.image = image
-        self.height, self.width = image.shape
-
-    def process(self):
+        self.pool = None
+        
+    def __enter__(self):
+        """
+        """
+        self.pool = Pool()    
+        return self
+ 
+    def __exit__(self, exc_type, exc_value, traceback):
+        """ 
+        """
+        self.pool.close()
+        self.pool.join()
+ 
+    def process(self, image):
         """
         Analyze the image. Do it in parallel.
         """ 
-        self.filter = np.zeros((self.height,self.width,1), np.uint8)
-        cols = np.arange(0,self.width)
+        if not self.pool:
+            raise RuntimeError ("Use process inside with statement.")
+        if (len(image.shape) != 2):
+            raise RuntimeError ("Grayscale images only.")
+        height, width = image.shape
+
+        cols = np.arange(0,width)
     
         #col_values = [self.image[:,int(col-INTERVAL/2):int(col+INTERVAL/2)].mean(axis=1) for col in cols]
-        col_values = [self.image[:,col] for col in cols]
+        col_values = [image[:,col] for col in cols]
     
-        pool = Pool()
-        laser_points = pool.map(self._find_center_point, col_values)
-    
-        pool.close()
-        pool.join()
-    
+        laser_points = self.pool.map(LaserLineFinder._find_center_point, col_values)
         return laser_points
 
     @staticmethod
@@ -134,10 +143,10 @@ def preview_image():
 
     num_analysis = 1
     image = cv2.imread(filename, 1)
-    start = timeit.default_timer()
-    for _ in range (num_analysis):
-        finder =  LaserLineFinder(image[:, :, 2]) 
-        points = finder.process()
+    with LaserLineFinder() as finder:
+        start = timeit.default_timer()
+        for _ in range (num_analysis):
+            points = finder.process(image[:, :, 2])
     diff = timeit.default_timer() - start
     print ("Analyzed " + str(num_analysis) + " in "+ str(diff) + "s." )
     image = point_overlay (image, points)

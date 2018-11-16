@@ -3,65 +3,23 @@ Run the laser capture program (assuming the camera/laser are already running on 
 """
 import argparse
 import sys
+import cv2
+import zmq
+from multiprocessing import Process
 from volteracamera.analysis.undistort import Undistort
 from volteracamera.analysis.plane import Plane
 from volteracamera.analysis.point_projector import PointProjector 
 from volteracamera.analysis.laser_line_finder import LaserLineFinder
-from volteracamera.control.camera import CameraReader
+from volteracamera.control.camera import Camera, CameraReader
 
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib
-
-DATA_BUFFER_SIZE = 100
-SWEEP_DISTANCE = 0.001
-
-class Plot3dScatterClass( object ):
-
-    def __init__( self ):
-        """
-        Set up the initial plot.
-        """
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot( 111, projection='3d' )
-        self.marker = "o"
-        self.color = "r" 
-        self.plot.scatter ([0], [0], [0])
-        plt.draw()
-
-    def draw_swept(self, data_list):
-        """
-        take the data as input and put it into the correct format, and sweep it across to aid in visualization.
-        """
-        xs = []
-        yx = []
-        zs = []
-        
-        for count, a_list in enumerate(data_list):
-            for point in a_list:
-                xs.append(point[0])
-                ys.append(point[1] + SWEEP_DISTANCE*0.001)
-                zs.append(point[2])
-        
-        self.draw_now(xs, ys, zs)
-
-    def draw_now( self, xs, ys, zs ):
-        """
-        Update thee plot given properly formatted x, y, z lists.
-        """
-        self.plot.remove()
-        self.plot = ax.scatter(xs, ys, zs, c=self.color, marker=self.marker)
-        plt.draw()                      # redraw the canvas
-
-matplotlib.interactive(True)
+PUBLISHING_PROTOCOL = "tcp"
+PUBLISHING_PORT = "2223"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("camera_parameters", type=str, help="json file containing undistortion class.")
     parser.add_argument("laser_plane", type=str, help="json file containing laser plane class.")
     parser.add_argument("-o", "--output_file", type=str, help="optional output file for the laser data, saved in csv format.")
-    parser.add_argument("-d", "--display", action="store_true")
 
     args = parser.parse_args()
 
@@ -75,31 +33,47 @@ if __name__ == "__main__":
     if laser_plane is None:
         print ("Failed to load laser plane parameters. Exiting...")
         sys.exit()
-    point_projector = PointProjector(cam_parame, laser_plane)
+    point_projector = PointProjector(cam_params, laser_plane)
 
-    cam_reader = CamReader()
+    print ("Starting the Camera Server")
+    #cam = Camera()
+    #cam.open()
+    #p = Process (target=cam.run)
+    #p.start()
+    print ("Camera Server started.")
+
+    print ("Starting Camera Reader.")
+    cam_reader = CameraReader()
+    print ("Camera reader started.")
+
+    print ("Setting up the data publisher")
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    socket_address ="{}://*:{}".format(PUBLISHING_PROTOCOL, PUBLISHING_PORT) 
+    socket.bind(socket_address.encode("utf-8"))
+    print ("Data publisher running at {}".format(socket_address))
 
     #conditional setup for displaying data.
-    if args.display:
-        data = []
-        plotter = Plot3dScatterClass()
+    with LaserLineFinder() as finder:
+        image_count = 0
+        while (True):
+            image = cam_reader.capture()
+            print ("Captured Image : {}".format(image_count))
+            image_points =finder.process(image[:,:,2]) 
+            image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
+            data_points = point_projector.project (image_points_full)
+    
+            for point in data_points:
+            #for point in image_points_full:
+                socket.send_string("{}, {}, {}, {}".format(image_count, point[0], point[1], point[2]));        
+                #socket.send_string("{}, {}, {}, {}".format(image_count, point[0][0], point[0][1], 0));        
+            socket.send_string("")
 
-    image_count = 0
-    while (True):
-        image = cam_reader.capture()
-        
-        image_points = LaserLineFinder(image).process()
+            if args.output_file:
+                with open(args.output_file, "a") as fid:
+                    for point in data_points:
+                        fid.write("{}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2]))
+            
+            image_count += 1
 
-        data_points = [point_projector.project (point) for point in image_points]
-
-        if args.display:
-            data.append(data_points)
-            if len(data) > DATA_BUFFER_SIZE:
-                data = data[(DATA_BUFFER_SIZE-len(data)):] #much more efficient than pop.
-            plotter.draw_swept(data)
-
-        if args.output_file:
-            with open(args.output_file, "a") as fid:
-                for point in data_points:
-                    fid.write("{}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2]))
-        image_count += 1
+    p.join()

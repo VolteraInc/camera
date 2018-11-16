@@ -9,7 +9,8 @@ import zmq
 from threading import Thread
 
 import importlib
-picam_spec = importlib.util.find_spec("picamera")
+from importlib import util
+picam_spec = util.find_spec("picamera")
 picam_found = picam_spec is not None
 if picam_found:
     from picamera import PiCamera
@@ -51,6 +52,7 @@ class Camera(object):
         #set up zmq context and publishing port. Only works on Unix like systems.
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
+        self.socket.set_hwm(1)
         self.socket.bind (CAMERA_INTERFACE)
 
         #set up the capture process
@@ -141,6 +143,7 @@ class CameraReader():
         """
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.SUB)
+        self.socket.set_hwm(1)
         self.socket.connect(CAMERA_INTERFACE)
         self.socket.setsockopt(zmq.SUBSCRIBE, b"") #subscribe to all sensors. 
 

@@ -26,8 +26,8 @@ class PointProjector (object):
 
     def project (self, points):
         """
-        Project points in sensor co-ords (i, j) onto a 3d point in space.
+        Project points in sensor co-ords ( j, only, i inferred) onto a 3d point in space.
         """
-        rays = self.undistort.get_ray_from_point(point)
-        lines = [Line (point = [0, 0, 0], direction=ray) for ray in rays]
+        rays = self.undistort.get_rays_from_points(points)
+        lines = (Line (point = [0, 0, 0], direction=ray) for ray in rays)
         return [ self.laser_plane.intersection_point (line) for line in lines ]

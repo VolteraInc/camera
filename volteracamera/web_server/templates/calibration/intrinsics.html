@@ -5,8 +5,8 @@
 <meta charset="utf-8"/>
 <style>
 img {
-  height: 150px;
-  width: 180px;
+  height: 180px;
+  width: 150px;
 }
 font {
   size: 7;
@@ -18,6 +18,7 @@ font {
 
 <span>
 {% if previous_url != None %}
+<h1>
 <a href="{{ previous_url }}"><</a>
 {% endif %}
 
@@ -25,6 +26,7 @@ font {
 
 {% if next_url != None %}
 <a href="{{ next_url }}">></a>
+</h1>
 {% endif %}
 </span>
 
