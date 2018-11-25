@@ -2,7 +2,9 @@
  * @author Ryan Wicks
  * Code for a 3D point cloud viewer
  */
+
 "use strict";
+
 
 ///Performance monitor
 (function () { 
@@ -20,42 +22,35 @@
 })();
 ///end performance monitor
 
-//load other javascript libraries
-(function () { 
-    var script = document.createElement('script'); 
-    script.src = '../static/three.js'; 
-    document.head.appendChild(script); 
-})();
-(function () { 
-    var script = document.createElement('script'); 
-    script.src = '../static/OrbitControls.js'; 
-    document.head.appendChild(script); 
-})();
- 
-//end
-
 var PointCloudViewer = function () {
 
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //Real view, scaled with distance
-    var renderer = new THREE.WebGLRenderer();
+    var scene, camera, renderer, controls;
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    const pointSize = 0.05;
+    function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //Real view, scaled with distance
+        renderer = new THREE.WebGLRenderer();
 
-    //Resize
-    window.addEventListener("resize", function () {
-        var width = window.innerWidth;
-        var height = window.innerHeight;
-        renderer.setSize(width, height);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-    });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-    //Adding controls
-    var control = new THREE.OrbitControls(camera, renderer.domElement);
+        //Resize
+        window.addEventListener("resize", function () {
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        });
 
-    var update = function () {
+        //Adding controls
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        
+        generatePointCloud();
+    };
+
+    var updateScene = function () {
         //cube.rotation.x += 0.01;
         //cube.rotation.y += 0.005;
 
@@ -65,63 +60,95 @@ var PointCloudViewer = function () {
         //light1.position.y = Math.cos(time*0.5)*40;
         //light1.position.z = Math.cos(time*0.3)*30;
 
-      }; 
+      };
 
     //draw scene
-    var render = function ()  {
+    function renderScene ()  {
       renderer.render( scene, camera );
-    }; 
+    };
 
-    var points = []
+    var points = [];
 
-    var addPoints = function( points_to_add ) {
+    function addPoints ( points_to_add ) {
         points = points.concat();
     };
 
-    var clearPoints = function() {
-        points = []
+    function clearPoints() {
+        points = [];
     };
 
-    var startPointCapture = function () {
+    function generatePointCloud() {
+        var geometry = new THREE.BufferGeometry();
+        
+        var numPoints = points.length;
+
+        var positions = new Float32Array( numPoints * 3 );
+        var colours = new Float32Array( numPoints * 3 );
+
+        for (var i = 0; i < numPoints; i++) {
+            positions[3*i] = point[i].x;
+            positions[3*i+1] = point[i].y;
+            positions[3*i+2] = point[i].z;
+
+            colours[3*i] = point[i].intensity;
+            colours[3*i+1] = 0;
+            colours[3*i+2] = 0;
+        }
+
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+		geometry.addAttribute( 'color', new THREE.BufferAttribute( colours, 3 ) );
+        geometry.computeBoundingBox();
+        
+        var material = new THREE.PointsMaterial( { size: pointSize, vertexColors: THREE.VertexColors } );
+        var pointcloud = new THREE.Points( geometry, material );
+    };
+
+    function startPointCapture () {
         const url = "/viewer/points";
 
         fetch (url, {cache: "no-store"}).then( function(response) {
             if (response.ok) {
 
+                startPointCapture();
             } else {
-                console.log("Network request for points failed with ")
-            }
+                console.log("Network request for points failed, response " + response.status + ": " + response.statusText);
+                startPointCapture();   
+            };
 
-        })
-    }    
+        });
+    };    
+
+    function animate() {
+        requestAnimationFrame ( animate );
+
+        updateScene();
+        renderScene();
+    };
 
     return {
-        update: update,
-        render: render,
+        //viewer logic
+        init: init,
+        animate: animate,
 
+        //Point cloud adding logic
         addPoints: addPoints,
         clearPoints: clearPoints,
 
+        //Point getting logic
         startPointCapture: startPointCapture,
     };
 
 };
 
+//Turn off the image sidebar
+var sidebar = document.getElementById('image-sidebar').style.display = "none";
+
 var viewer = PointCloudViewer();
-
+viewer.init()
 //Start the viewer communication with the server.
-viewer.startPointCapture();
-
-//Setup the drawing loop
-var ViewerLoop = function ( viewer ) {
-    requestAnimationFrame ( ViewerLoop );
-
-    viewer.update();
-    viewer.render();
-}
-
-//Start the drawing loop
-ViewerLoop ( viewer );
+//viewer.startPointCapture();
+//start the drawing loop
+viewer.animate();
 
 //Create the shape
 //      var geometry = new THREE.BoxGeometry(1, 1, 1);

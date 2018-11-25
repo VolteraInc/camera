@@ -16,7 +16,7 @@ function captureImage() {
         loadSidebar(sidebar_element)
         loader.start()
       } else {
-        console.log('Network request to save image fialed, respone ' + response.status + ': ' + response.statusText);
+        console.log('Network request to save image failed, response ' + response.status + ': ' + response.statusText);
         loader.start()
       }
     }

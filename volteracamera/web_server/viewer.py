@@ -24,7 +24,9 @@ def generate_points ():
     """
     Method that generates a set of points.
     """
-    points = np.asarray([ np.asarray[ np.sin ( 2 * np.pi * 100 * (t+i+j) ) for i in np.range ( -5, 5, 0.1 ) ]) for j in range (-5, 5, 0.1) ]).flatten()  
+    points = np.asarray([ 
+                np.asarray([ np.sin ( 2 * np.pi * 100 * (t+i+j) ) for i in np.range ( -5, 5, 0.1 ) ]) 
+                for j in range (-5, 5, 0.1) ]).flatten()  
     t += 0.1
     return list(points)
 
