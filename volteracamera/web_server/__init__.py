@@ -83,9 +83,11 @@ def create_app(test_config=None):
     from . import app
     from . import controls
     from . import calibration
+    from . import viewer
     application.register_blueprint(app.bp) 
     application.register_blueprint(controls.bp)
     application.register_blueprint(calibration.bp)
+    application.register_blueprint(viewer.bp)
 
     application.before_first_request (initialize)
     application.after_request (add_header)
