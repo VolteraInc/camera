@@ -5,33 +5,41 @@
 
 "use strict";
 
+if (WEBGL.isWebGLAvailable() === false) {
+    document.body.appendChild(WEBGL.getWebGLErrorMessage());
+}
+
 
 ///Performance monitor
-(function () { 
-    var script = document.createElement('script'); 
-    script.onload = function () { 
-        var stats = new Stats(); 
-        document.body.appendChild(stats.dom); 
-        requestAnimationFrame(function loop() { 
-            stats.update(); 
-            requestAnimationFrame(loop) 
-        }); 
-    }; 
-    script.src = '../static/stats.min.js'; 
-    document.head.appendChild(script); 
+(function () {
+    var script = document.createElement('script');
+    script.onload = function () {
+        var stats = new Stats();
+        document.body.appendChild(stats.dom);
+        requestAnimationFrame(function loop() {
+            stats.update();
+            requestAnimationFrame(loop)
+        });
+    };
+    script.src = '../static/stats.min.js';
+    document.head.appendChild(script);
 })();
 ///end performance monitor
 
 var PointCloudViewer = function () {
 
-    var scene, camera, renderer, controls;
+    var scene, camera, renderer, controls, hemiLight, dirLight;
 
     const pointSize = 0.05;
+    const pointsName = "points";
+
     function init() {
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //Real view, scaled with distance
+        camera.position.set(0, 0, 10);
+        camera.lookAt(scene.position);
         renderer = new THREE.WebGLRenderer();
-
+        renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
@@ -45,9 +53,35 @@ var PointCloudViewer = function () {
         });
 
         //Adding controls
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
-        
+        controls = new THREE.TrackballControls(camera);
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+        controls.keys = [ 65, 83, 68 ];
+        controls.addEventListener( 'change', renderScene );
+
+        scene.background = new THREE.Color().setHSL(0.6, 0, 1);
+        scene.fog = new THREE.Fog(scene.background, 1, 5000);
+
+        // LIGHTS
+        hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
+        hemiLight.color.setHSL(0.6, 1, 0.6);
+        hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+        hemiLight.position.set(0, 50, 0);
+        scene.add(hemiLight);
+        dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.color.setHSL(0.1, 1, 0.95);
+        dirLight.position.set(- 1, 1.75, 1);
+        dirLight.position.multiplyScalar(30);
+        scene.add(dirLight);
+
         generatePointCloud();
+
+        renderScene();
     };
 
     var updateScene = function () {
@@ -60,68 +94,79 @@ var PointCloudViewer = function () {
         //light1.position.y = Math.cos(time*0.5)*40;
         //light1.position.z = Math.cos(time*0.3)*30;
 
-      };
+    };
 
     //draw scene
-    function renderScene ()  {
-      renderer.render( scene, camera );
+    function renderScene() {
+        renderer.render(scene, camera);
     };
 
     var points = [];
 
-    function addPoints ( points_to_add ) {
-        points = points.concat();
+    function addPoints(points_to_add) {
+        points = points.concat(points_to_add);
+        generatePointCloud();
+        clearPoints();
     };
 
     function clearPoints() {
         points = [];
+        var pointsObject = scene.getObjectByName(pointsName);
+        scene.remove(pointsObject);
     };
 
     function generatePointCloud() {
         var geometry = new THREE.BufferGeometry();
-        
+
         var numPoints = points.length;
 
-        var positions = new Float32Array( numPoints * 3 );
-        var colours = new Float32Array( numPoints * 3 );
+        var positions = new Float32Array(numPoints * 3);
+        var colours = new Float32Array(numPoints * 3);
 
         for (var i = 0; i < numPoints; i++) {
-            positions[3*i] = point[i].x;
-            positions[3*i+1] = point[i].y;
-            positions[3*i+2] = point[i].z;
+            positions[3 * i] = points[i].x;
+            positions[3 * i + 1] = points[i].y;
+            positions[3 * i + 2] = points[i].z;
 
-            colours[3*i] = point[i].intensity;
-            colours[3*i+1] = 0;
-            colours[3*i+2] = 0;
+            colours[3 * i] = points[i].i;
+            colours[3 * i + 1] = 0;
+            colours[3 * i + 2] = 0;
         }
 
-        geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-		geometry.addAttribute( 'color', new THREE.BufferAttribute( colours, 3 ) );
+        geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.addAttribute('color', new THREE.BufferAttribute(colours, 3));
         geometry.computeBoundingBox();
-        
-        var material = new THREE.PointsMaterial( { size: pointSize, vertexColors: THREE.VertexColors } );
-        var pointcloud = new THREE.Points( geometry, material );
+
+        var material = new THREE.PointsMaterial({ size: pointSize, vertexColors: THREE.VertexColors });
+        var pointCloud = new THREE.Points(geometry, material);
+        pointCloud.name = pointsName;
+
+        scene.add(pointCloud);
     };
 
-    function startPointCapture () {
+    function startPointCapture() {
         const url = "/viewer/points";
 
-        fetch (url, {cache: "no-store"}).then( function(response) {
+        fetch(url, { cache: "no-store" }).then(function (response) {
             if (response.ok) {
-
-                startPointCapture();
+                return response.json();
             } else {
-                console.log("Network request for points failed, response " + response.status + ": " + response.statusText);
-                startPointCapture();   
+                throw new Error("Network request for points failed, response " + response.status + ": " + response.statusText);
             };
-
+        }).then(function (myJson) {
+            addPoints(myJson);
+            startPointCapture();
+        }).catch(function (error) {
+            console.log("There was a problem with the request: " + error.message);
         });
-    };    
+    };
 
     function animate() {
-        requestAnimationFrame ( animate );
+        requestAnimationFrame(animate);
 
         updateScene();
+
+        controls.update();
         renderScene();
     };
 
@@ -146,7 +191,7 @@ var sidebar = document.getElementById('image-sidebar').style.display = "none";
 var viewer = PointCloudViewer();
 viewer.init()
 //Start the viewer communication with the server.
-//viewer.startPointCapture();
+viewer.startPointCapture();
 //start the drawing loop
 viewer.animate();
 
