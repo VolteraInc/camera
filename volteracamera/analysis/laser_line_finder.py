@@ -202,9 +202,8 @@ class LaserProcessingServer (threading.Thread):
                 image_count = 0
                 if (self.stop_capture == 0):
                     while ( self.stop_capture == 0):
-                        self.camera.capture_single()
+                        image = self.camera.capture_single()
                         logging.debug("Capturing image {}".format(image_count))
-                        image = self.camera_reader.capture()
                         logging.debug ("Captured Image : {}".format(image_count))
                         image_points = finder.process(image[:,:,0]) 
                         image_points_full = [[[i, j]] for i, j in enumerate(image_points)]

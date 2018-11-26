@@ -45,7 +45,7 @@ var PointCloudViewer = function () {
 
     var scene, camera, renderer, controls, hemiLight, dirLight, viewerDiv, axis;
 
-    const pointSize = 0.0000005;
+    const pointSize = 0.00000005;
     const pointsName = "points";
 
     function init(viewerDiv = null) {

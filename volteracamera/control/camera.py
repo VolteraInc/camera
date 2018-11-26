@@ -132,7 +132,7 @@ class Camera(threading.Thread):
                         logging.debug("Sent real image.")
                         self.raw_capture.truncate(0)
                         with self.frame_mutex:
-                            self.frame = frame
+                            self.frame = frame.array.copy()
                         if self.stop_capture: 
                             logging.debug("Capture stopped.")
                             break
@@ -156,18 +156,16 @@ class Camera(threading.Thread):
         Capture a single image from the camera.
         """
         if picam_found:
-            #frame = self.camera.capture(self.raw_capture, format="rgb")
             with self.frame_mutex:
-                Camera._send_array (self.socket, self.frame.array)
-            ##self.raw_capture.truncate(0)
-            logging.debug("Sent real image.")
+                frame = self.frame.copy()
+            return frame
         else:
             frame = Image.new(mode="RGB", size=(720, 1280))
             imarr = np.asarray(frame)
             imarr.flags.writeable = True
             imarr[:, 400, 0] = 128
-            Camera._send_array (self.socket, np.asarray(frame))
             logging.debug("Sent simulated image.")
+            return frame
 
     def run(self):
         """
@@ -209,7 +207,12 @@ class CameraReader():
         md = socket.recv_json(flags=flags)
         msg = socket.recv(flags=flags, copy=copy, track=track)
         A = np.frombuffer(msg, dtype=md['dtype'])
-        return A.reshape(md['shape'])
+        try:
+            A = A.reshape(md['shape'])
+            return A
+        except:
+            logging.warning("Image data was sent incomplete over the wire, replacing with black image.")
+            return None
 
     @staticmethod
     def array_to_image( input_array: np.ndarray)->Image:
