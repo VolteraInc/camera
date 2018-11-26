@@ -8,6 +8,10 @@ from ..control.laser import Laser
 from ..analysis.laser_line_finder import LaserProcessingServer, Undistort
 from ..analysis.plane import Plane
 
+import logging
+logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG)
+
+
 DEFAULT_LASER_PLANE_FILE="laser.json"
 DEFAULT_CAMERA_FILE="camera.json"
 
@@ -59,6 +63,7 @@ def initialize( file_path ):
     Called on first web server request. This starts all the different global processes.
     """
     global processor
+    logging.debug("Initializing global structures.")
     #Instantiate and start the camera
     cam = get_cam()
     cam.run()

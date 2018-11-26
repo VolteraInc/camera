@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify
-
+import logging
 from io import BytesIO
 import numpy as np
 
@@ -30,8 +30,13 @@ def generate_points():
     global t
     global points
     laser_client = LaserProcessingClient()
-    point_list.append (laser_client.get_data())
-    return list(point_list)
+    captured_points = laser_client.get_data()
+    if not captured_points: 
+        logging.debug("No new points are being sent to the client.")
+        return None
+    point_list.append(captured_points)
+    logging.debug("{} points are being sent to client.".format (len(point_list)))
+    return point_list
 
 #routes
 @bp.route('/viewer')
@@ -55,7 +60,10 @@ def start_laser():
     Start collecting image data
     """
     processor = get_processor()
-    processor.start()
+    logging.debug("Processor stop requested.")
+    if not processor.is_alive():
+        logging.debug ("Processor stop sent.")
+        processor.start()
     return "OK"
 
 @bp.route('stop')
@@ -65,4 +73,5 @@ def stop_laser():
     """
     processor = get_processor()
     processor.stop()
+    logging.debug("Processor stop requested.")
     return "OK"

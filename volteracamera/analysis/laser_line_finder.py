@@ -5,13 +5,13 @@ of sensor pixel positions. As input, it takes a greyscale image in a numpy array
 import numpy as np
 import cv2
 import zmq
-import threading
+import multiprocessing
 from multiprocessing import Process, Pool
 from volteracamera.analysis.undistort import Undistort
 from volteracamera.analysis.plane import Plane
 from volteracamera.analysis.point_projector import PointProjector 
 from volteracamera.control.camera import CameraReader
-
+import logging
 
 PUBLISHING_PROTOCOL = "tcp"
 PUBLISHING_PORT = "2223"
@@ -53,6 +53,7 @@ class LaserLineFinder (object):
         """
         Analyze the image. Do it in parallel.
         """ 
+        logging.debug ("Laser processor started.")
         if not self.pool:
             raise RuntimeError ("Use process inside with statement.")
         if (len(image.shape) != 2):
@@ -167,7 +168,7 @@ def preview_image():
     cv2.destroyAllWindows()
     cv2.imwrite("out.jpg", image)
 
-class LaserProcessingServer (threading.Thread):
+class LaserProcessingServer (multiprocessing.Process):
     """
     Server for analyzing data captured by the camera server.
     """
@@ -176,6 +177,7 @@ class LaserProcessingServer (threading.Thread):
         """
         Set up the laser analysis server.
         """
+        super().__init__()
         self.point_projector = PointProjector(camera_parameters, laser_plane)
         self.camera_reader = CameraReader()
         self.context = zmq.Context()
@@ -183,29 +185,31 @@ class LaserProcessingServer (threading.Thread):
         socket_address ="{}://*:{}".format(PUBLISHING_PROTOCOL, PUBLISHING_PORT) 
         self.socket.set_hwm(PROFILE_HIGH_WATER_MARK)
         self.socket.bind(socket_address.encode("utf-8"))
-        self.stop_capture = False
-        self.save_data_flag = False
-        self.output_file = ""
+        self.stop_capture = multiprocessing.Value("i", 0)
+        self.save_data_flag = multiprocessing.Value("i", 0)
+        #self.output_file = multiprocessing.Value("i", "")
 
     def run (self):
-        self.stop_capture = False
+        self.stop_capture.value = 0
+        logging.debug("Laser processing started.")
         with LaserLineFinder() as finder:
             image_count = 0
-            while ( not self.stop_capture ):
+            while ( self.stop_capture.value != 0):
                 image = self.camera_reader.capture()
-                print ("Captured Image : {}".format(image_count))
+                logging.debug ("Captured Image : {}".format(image_count))
                 image_points = finder.process(image[:,:,2]) 
                 image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
                 data_points = self.point_projector.project (image_points_full)
 
+                logging.log("{} were found and are being transferred for display.".format (len(data_points)))
                 for point in data_points:
                     self.socket.send_string("{}, {}, {}, {}".format(image_count, point[0], point[1], point[2]))        
                 self.socket.send_string("")
 
-                if self.save_data_flag:
-                    with open(self.output_file, "a") as fid:
-                        for point in data_points:
-                            fid.write("{}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2]))
+                #if self.save_data_flag.value != 0:
+                    #with open(self.output_file.value, "a") as fid:
+                    #    for point in data_points:
+                    #        fid.write("{}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2]))
 
                 image_count += 1
 
@@ -213,7 +217,8 @@ class LaserProcessingServer (threading.Thread):
         """
         Stop the process in another thread.
         """
-        self.stop_capture = True
+        self.stop_capture.value = 1
+        logging.log("Processor stopped.")
         if self.is_alive():
             self.join()
 
@@ -221,8 +226,9 @@ class LaserProcessingServer (threading.Thread):
         """
         Set up the data saving.
         """
-        self.output_file = output_file
-        self.save_data_flag = True
+        logging.debug ("Save data requested in file {}".format(output_file))
+        #self.output_file.value = output_file
+        self.save_data_flag.value = 1
 
 class LaserProcessingClient(object):
     """
@@ -239,6 +245,7 @@ class LaserProcessingClient(object):
         self.socket.connect (socket_address.encode("utf-8"))
         self.socket.set_hwm(PROFILE_HIGH_WATER_MARK)
         self.socket.setsockopt(zmq.SUBSCRIBE, "".encode("utf-8")) #no filtering of incoming data.
+        logging.debug("Laser processing client set up.")
 
     def get_data(self)->list:
         """
@@ -249,11 +256,13 @@ class LaserProcessingClient(object):
             try:
                 in_string = self.socket.recv_string(zmq.NOBLOCK)
             except zmq.error.Again:  #other endpoint is not connected.
+                logging.debug("ZMQ could not communicate with processor endpoint.")
                 break
             if not in_string:
                 break
             point = [float(val) for val in in_string.split(',')]
             point_list.append([{"x":point[1], "y":point[2]+point[0]*PROFILE_OFFSET, "z":point[3], "i":255}])
+        logging.debug("Laser processing client recieved {} points".format(len(point_list)))
         return point_list
 
 

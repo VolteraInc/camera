@@ -48,8 +48,7 @@ var PointCloudViewer = function () {
     const pointSize = 0.05;
     const pointsName = "points";
 
-    function init(viewerDivName = "") {
-        viewerDiv = document.getElementById(viewerDivName);
+    function init(viewerDiv = null) {
 
         if (viewerDiv === null) {
             viewerDiv = window;
@@ -62,8 +61,7 @@ var PointCloudViewer = function () {
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(viewerDiv.innerWidth, viewerDiv.innerHeight);
-        viewerDiv.innerHTML = "";
-        viewerDiv.appendChild(renderer.domElement);
+        document.body.appendChild(renderer.domElement);
 
         //Resize
         window.addEventListener("resize", function () {
@@ -101,8 +99,7 @@ var PointCloudViewer = function () {
         dirLight.position.multiplyScalar(30);
         scene.add(dirLight);
 
-        generatePointCloud();
-
+        addPoints([{"x":0, "y":0, "z":0, "i":0}]);
         renderScene();
     };
 
@@ -123,20 +120,25 @@ var PointCloudViewer = function () {
         renderer.render(scene, camera);
     };
 
-    var points = [{"x":0, "y":0, "z":0, "i":0}];
+    var points = []; 
 
     function addPoints(points_to_add) {
-        points = points.concat(points_to_add);
-        generatePointCloud();
+        if (points_to_add !== null) {
+            points = points.concat(points_to_add);
+            generatePointCloud();
+        }
     };
 
     function clearPoints() {
         points = [];
-        var pointsObject = scene.getObjectByName(pointsName);
-        scene.remove(pointsObject);
     };
 
     function generatePointCloud() {
+
+        //Add new points, so remove old ones first.
+        var pointsObject = scene.getObjectByName(pointsName);
+        scene.remove(pointsObject);
+
         var geometry = new THREE.BufferGeometry();
 
         var numPoints = points.length;
@@ -170,7 +172,8 @@ var PointCloudViewer = function () {
     var capture_points = false;
     function stopPointCapture() {
         const stop_url = "/viewer/stop";
-        fetch (stop_url).then(function () {
+        fetch(stop_url).then(function () {
+            console.log("Stopped Point Capture");
             capture_points = false;
         });
     }
@@ -180,7 +183,10 @@ var PointCloudViewer = function () {
         if (!capture_points) {
             clearPoints();
             capture_points = true;
-            fetch(start_url).then(getPoints());
+            fetch(start_url).then( function () {
+                console.log("Starting Point Capture");
+                getPoints();
+            });
         }
     }
 
@@ -198,7 +204,7 @@ var PointCloudViewer = function () {
             };
         }).then(function (myJson) {
             addPoints(myJson);
-            getPoints();
+            setTimeout(getPoints, 1000);
         }).catch(function (error) {
             console.log("There was a problem with the request: " + error.message);
         });
@@ -230,7 +236,8 @@ var PointCloudViewer = function () {
 };
 
 var viewer = PointCloudViewer();
-viewer.init("split-content")
-viewer.startPointCapture();
+//viewer.init("split-content");
+viewer.init();
+//viewer.startPointCapture();
 //start the drawing loop
 viewer.animate();

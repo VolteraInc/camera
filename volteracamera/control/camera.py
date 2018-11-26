@@ -7,12 +7,13 @@ from PIL import Image
 import numpy as np
 import zmq
 from threading import Thread
-
+import logging
 import importlib
 from importlib import util
 picam_spec = util.find_spec("picamera")
 picam_found = picam_spec is not None
 if picam_found:
+    logging.info ("Camera found, running on raspbery pi.")
     from picamera import PiCamera
     from picamera.array import PiRGBArray
 
@@ -38,7 +39,7 @@ class Camera(object):
         Initialization of the camera.
         """
         if picam_found:
-            print ("Starting Camera")
+            logging.info ("Starting Camera")
             self.camera = PiCamera()
             self.camera.resolution = RESOLUTION
             #self.camera.zoom = ZOOM
@@ -58,6 +59,7 @@ class Camera(object):
         #set up the capture process
         self.stop_capture = False
         self.capture_process = Thread (target = self._capture_continuous)
+        logging.debug("Camera initialized.")
 
     def open(self):
         """
@@ -123,14 +125,30 @@ class Camera(object):
             raw_capture = PiRGBArray(self.camera, size=(RESOLUTION[0], RESOLUTION[1]))
             for frame in self.camera.capture_continuous(raw_capture, format="rgb", use_video_port=True):
                 Camera._send_array (self.socket, frame.array)
+                logging.debug("Sent real image.")
                 raw_capture.truncate(0)
                 if self.stop_capture: 
+                    logging.debug("Capture stopped.")
                     break
+        else:
+            while (True):
+                frame = Image.new(mode="RGB", size=(720, 1280))
+                imarr = np.asarray(frame)
+                imarr.flags.writeable = True
+                imarr[400, :, 2] = 128
+                Camera._send_array (self.socket, np.asarray(frame))
+                logging.debug("Sent simulated image.")
+                time.sleep(0.1) # slow down the capture to about 10fps
+                if self.stop_capture:
+                    logging.debug("Capture stopped.")
+                    break
+
 
     def run(self):
         """
         This method starts the camera running in continuous mode, and publishes images over an IPC socket.
         """
+        logging.debug("Camera capture started.")
         self.stop_capture = False
         self.capture_process.start()
 
@@ -147,6 +165,7 @@ class CameraReader():
         self.socket.set_hwm(1)
         self.socket.connect(CAMERA_INTERFACE)
         self.socket.setsockopt(zmq.SUBSCRIBE, b"") #subscribe to all sensors. 
+        logging.debug ( "Camera reader started." )
 
     @staticmethod
     def _recv_array(socket, flags=0, copy=True, track=False):
@@ -171,6 +190,7 @@ class CameraReader():
         Return a 3 channel np.array (RGB)
         """
         output = CameraReader._recv_array(self.socket)
+        logging.debug ("Image captured by camera reader.")
         return output
 
 

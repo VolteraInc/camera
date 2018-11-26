@@ -2,9 +2,11 @@
 Class for controlling the laser power.
 """
 import importlib
+import logging
 gpio_spec = importlib.util.find_spec("gpiozero")
 gpio_found = gpio_spec is not None
 if gpio_found:
+    logging.debug("Real Laser found.")
     from gpiozero import PWMLED
 
 GPIO_PIN=4
