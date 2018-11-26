@@ -37,7 +37,7 @@ if __name__=="__main__":
 
     undistort = Undistort.read_json_file(args.input_file)
     if not undistort:
-        print ("Could not load camera parameters from " + args.input_file+". Exitin...")
+        print ("Could not load camera parameters from " + args.input_file+". Exiting...")
         sys.exit()
 
     fitter = LaserFitter(undistort, data_points_list, distance_list)

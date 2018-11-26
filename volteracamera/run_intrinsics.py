@@ -9,7 +9,7 @@ from pathlib import Path
 from volteracamera.analysis.undistort import Undistort
 from volteracamera.intrinsics.circles_calibration import run_calibration
 
-FILTER_WIDTH=60
+FILTER_WIDTH=20
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
