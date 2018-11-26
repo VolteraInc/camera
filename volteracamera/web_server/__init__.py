@@ -66,14 +66,14 @@ def initialize( file_path ):
     logging.debug("Initializing global structures.")
     #Instantiate and start the camera
     cam = get_cam()
-    cam.run()
+    cam.start()
     #Intantiate and start the laser
     _ = get_laser()
     #load in the calibration files
     cam_params = Undistort.read_json_file(os.path.join( file_path, DEFAULT_CAMERA_FILE))
     laser_plane = Plane.read_json_file(os.path.join(file_path, DEFAULT_LASER_PLANE_FILE))   
     #initialize the laser processor
-    processor = LaserProcessingServer (cam_params, laser_plane)
+    processor = LaserProcessingServer (cam_params, laser_plane, cam)
 
 # prevent cached responses
 def add_header(r):

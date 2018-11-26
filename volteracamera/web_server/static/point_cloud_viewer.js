@@ -43,9 +43,9 @@ if (WEBGL.isWebGLAvailable() === false) {
 
 var PointCloudViewer = function () {
 
-    var scene, camera, renderer, controls, hemiLight, dirLight, viewerDiv;
+    var scene, camera, renderer, controls, hemiLight, dirLight, viewerDiv, axis;
 
-    const pointSize = 0.05;
+    const pointSize = 0.0000005;
     const pointsName = "points";
 
     function init(viewerDiv = null) {
@@ -55,8 +55,8 @@ var PointCloudViewer = function () {
         }
 
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(75, viewerDiv.innerWidth / viewerDiv.innerHeight, 0.1, 1000); //Real view, scaled with distance
-        camera.position.set(0, 0, 10);
+        camera = new THREE.PerspectiveCamera(75, viewerDiv.innerWidth / viewerDiv.innerHeight, 0.0000000001, 10); //Real view, scaled with distance
+        camera.position.set(0, 0, 0.00005);
         camera.lookAt(scene.position);
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -75,8 +75,8 @@ var PointCloudViewer = function () {
         //Adding controls
         controls = new THREE.TrackballControls(camera);
         controls.rotateSpeed = 1.0;
-        controls.zoomSpeed = 1.2;
-        controls.panSpeed = 0.8;
+        controls.zoomSpeed = 2;
+        controls.panSpeed = 1.8;
         controls.noZoom = false;
         controls.noPan = false;
         controls.staticMoving = true;
@@ -98,6 +98,9 @@ var PointCloudViewer = function () {
         dirLight.position.set(- 1, 1.75, 1);
         dirLight.position.multiplyScalar(30);
         scene.add(dirLight);
+
+        axis = new THREE.AxesHelper(0.000005);
+        scene.add(axis);
 
         addPoints([{"x":0, "y":0, "z":0, "i":0}]);
         renderScene();
@@ -121,9 +124,29 @@ var PointCloudViewer = function () {
     };
 
     var points = []; 
+    var center = [0, 0, 0];
+
+    function findCenter(points_to_add) {
+        center = [0, 0, 0];
+
+        if ( points_to_add.length === 0 ){
+            return;
+        }
+        for (let point of points_to_add) {
+            center[0] += point.x;
+            center[1] += point.y;
+            center[2] += point.z;
+        }
+        center[0] /= points_to_add.length;
+        center[1] /= points_to_add.length;
+        center[2] /= points_to_add.length;
+    };
 
     function addPoints(points_to_add) {
         if (points_to_add !== null) {
+            if (center.length === 3 && center.every(function(value, index) { return value === [0, 0, 0][index];})) {
+                findCenter(points_to_add);
+            }
             points = points.concat(points_to_add);
             generatePointCloud();
         }
@@ -131,6 +154,7 @@ var PointCloudViewer = function () {
 
     function clearPoints() {
         points = [];
+        center = [0, 0, 0];
     };
 
     function generatePointCloud() {
@@ -147,9 +171,9 @@ var PointCloudViewer = function () {
         var colours = new Float32Array(numPoints * 3);
 
         for (var i = 0; i < numPoints; i++) {
-            positions[3 * i] = points[i].x;
-            positions[3 * i + 1] = points[i].y;
-            positions[3 * i + 2] = points[i].z;
+            positions[3 * i] = points[i].x - center[0];
+            positions[3 * i + 1] = points[i].y - center[1];
+            positions[3 * i + 2] = points[i].z - center[2];
 
             colours[3 * i] = points[i].i;
             colours[3 * i + 1] = 0;
@@ -204,7 +228,7 @@ var PointCloudViewer = function () {
             };
         }).then(function (myJson) {
             addPoints(myJson);
-            setTimeout(getPoints, 1000);
+            setTimeout(getPoints, 250);
         }).catch(function (error) {
             console.log("There was a problem with the request: " + error.message);
         });

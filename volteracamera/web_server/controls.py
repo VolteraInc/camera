@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, send_file, request, jsonify
 
 from ..control.camera import CameraReader
-from . import get_cam, get_laser, get_data_store
+from ..analysis.laser_line_finder import LaserProcessingServer
+from . import get_cam, get_laser, get_data_store, get_processor
 from .data_model import ImageData
 from io import BytesIO
 
@@ -14,6 +15,8 @@ def preview():
     """
     Render the preview page.
     """
+    cam = get_cam()
+    cam.restart()
     return render_template("controls/preview.html")
 
 @bp.route('/controls')

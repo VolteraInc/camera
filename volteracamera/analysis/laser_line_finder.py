@@ -3,18 +3,19 @@ This class is used to analyze incoming images for laser lines. It returns a set
 of sensor pixel positions. As input, it takes a greyscale image in a numpy array format.
 """
 import numpy as np
+import time
 import cv2
 import zmq
 import multiprocessing
+import threading
 from multiprocessing import Process, Pool
 from volteracamera.analysis.undistort import Undistort
 from volteracamera.analysis.plane import Plane
 from volteracamera.analysis.point_projector import PointProjector 
-from volteracamera.control.camera import CameraReader
+from volteracamera.control.camera import CameraReader, Camera
 import logging
 
-PUBLISHING_PROTOCOL = "tcp"
-PUBLISHING_PORT = "2223"
+DATA_INTERFACE="ipc:///tmp/data_thread"
 PROFILE_HIGH_WATER_MARK = 10000
 
 KERNEL=51
@@ -22,7 +23,7 @@ FILTER_SMOOTH = (np.zeros(KERNEL) + 1.0)/KERNEL
 FILTER_SHARPEN = (np.zeros(KERNEL) - 1.0)
 FILTER_SHARPEN[int(KERNEL/2)] = KERNEL 
 INTERVAL = 1
-PROFILE_OFFSET = 0.001 #move each profile over by one mm in the y direction.
+PROFILE_OFFSET = 0.0000001 #move each profile over by one mm in the y direction.
 
 class LaserLineFinder (object):
     """
@@ -53,7 +54,7 @@ class LaserLineFinder (object):
         """
         Analyze the image. Do it in parallel.
         """ 
-        logging.debug ("Laser processor started.")
+        logging.debug ("Laser line finder started.")
         if not self.pool:
             raise RuntimeError ("Use process inside with statement.")
         if (len(image.shape) != 2):
@@ -66,6 +67,7 @@ class LaserLineFinder (object):
         col_values = [image[:,col] for col in cols]
     
         laser_points = self.pool.map(LaserLineFinder._find_center_point, col_values)
+        logging.debug ("Laser line finder finished, finding {} points".format(len(laser_points)))
         return laser_points
 
     @staticmethod
@@ -168,81 +170,93 @@ def preview_image():
     cv2.destroyAllWindows()
     cv2.imwrite("out.jpg", image)
 
-class LaserProcessingServer (multiprocessing.Process):
+class LaserProcessingServer (threading.Thread):
     """
     Server for analyzing data captured by the camera server.
     """
 
-    def __init__(self, camera_parameters, laser_plane):
+    def __init__(self, camera_parameters, laser_plane, camera):
         """
         Set up the laser analysis server.
         """
         super().__init__()
         self.point_projector = PointProjector(camera_parameters, laser_plane)
+        self.camera = camera
         self.camera_reader = CameraReader()
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
-        socket_address ="{}://*:{}".format(PUBLISHING_PROTOCOL, PUBLISHING_PORT) 
+        #socket_address ="{}://*:{}".format(PUBLISHING_PROTOCOL, PUBLISHING_PORT) 
         self.socket.set_hwm(PROFILE_HIGH_WATER_MARK)
-        self.socket.bind(socket_address.encode("utf-8"))
-        self.stop_capture = multiprocessing.Value("i", 0)
-        self.save_data_flag = multiprocessing.Value("i", 0)
-        #self.output_file = multiprocessing.Value("i", "")
+        self.socket.bind(DATA_INTERFACE.encode("utf-8"))
+        self.stop_capture =  0
+        self.save_data_flag = 0
+        self.output_file = ""
 
     def run (self):
-        self.stop_capture.value = 0
+        self.stop_capture = 0
+        self.camera.stop()
         logging.debug("Laser processing started.")
         with LaserLineFinder() as finder:
-            image_count = 0
-            while ( self.stop_capture.value != 0):
-                image = self.camera_reader.capture()
-                logging.debug ("Captured Image : {}".format(image_count))
-                image_points = finder.process(image[:,:,2]) 
-                image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
-                data_points = self.point_projector.project (image_points_full)
+            logging.debug("Starting processing loop.")
+            while (True):
+                image_count = 0
+                if (self.stop_capture == 0):
+                    while ( self.stop_capture == 0):
+                        self.camera.capture_single()
+                        logging.debug("Capturing image {}".format(image_count))
+                        image = self.camera_reader.capture()
+                        logging.debug ("Captured Image : {}".format(image_count))
+                        image_points = finder.process(image[:,:,0]) 
+                        image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
+                        intensities = [ image[ind[0][1], ind[0][0], 2] for ind in image_points_full ]
+                        data_points = self.point_projector.project (image_points_full)
 
-                logging.log("{} were found and are being transferred for display.".format (len(data_points)))
-                for point in data_points:
-                    self.socket.send_string("{}, {}, {}, {}".format(image_count, point[0], point[1], point[2]))        
-                self.socket.send_string("")
+                        logging.debug("{} were found and are being transferred for display.".format (len(data_points)))
+                        buffer = ""
+                        for point, intensity in zip(data_points, intensities):
+                            buffer += "{}, {}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2], intensity) 
+                        self.socket.send_string(buffer)
 
-                #if self.save_data_flag.value != 0:
-                    #with open(self.output_file.value, "a") as fid:
-                    #    for point in data_points:
-                    #        fid.write("{}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2]))
+                        if self.save_data_flag != 0:
+                            with open(self.output_file, "a") as fid:
+                                fid.write(buffer)
 
-                image_count += 1
+                        image_count += 1
+                else:
+                    time.sleep(1)
 
     def stop (self):
         """
         Stop the process in another thread.
         """
-        self.stop_capture.value = 1
-        logging.log("Processor stopped.")
-        if self.is_alive():
-            self.join()
+        self.stop_capture = 1
+        logging.debug("Processor stopped.")
+
+    def restart(self):
+        self.stop_capture = 0
+        logging.debug("Processor restarted.")
 
     def save_data (self, output_file):
         """
         Set up the data saving.
         """
         logging.debug ("Save data requested in file {}".format(output_file))
-        #self.output_file.value = output_file
-        self.save_data_flag.value = 1
+        self.output_file.value = output_file
+        self.save_data_flag = 1
 
 class LaserProcessingClient(object):
     """
     Recieve laser data.
     """ 
 
-    def __init__(self, ip_address: str = "127.0.0.1") -> None:
+    def __init__(self, ip_address="localhost") -> None:
         """
         Set up a reader for the processed laser data.
         """
-        socket_address ="{}://{}:{}".format(PUBLISHING_PROTOCOL, ip_address, PUBLISHING_PORT)
+        #socket_address ="{}://{}:{}".format(PUBLISHING_PROTOCOL, ip_address, PUBLISHING_PORT)
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.SUB)
-        self.socket.connect (socket_address.encode("utf-8"))
+        self.socket.connect (DATA_INTERFACE.encode("utf-8"))
         self.socket.set_hwm(PROFILE_HIGH_WATER_MARK)
         self.socket.setsockopt(zmq.SUBSCRIBE, "".encode("utf-8")) #no filtering of incoming data.
         logging.debug("Laser processing client set up.")
@@ -251,18 +265,12 @@ class LaserProcessingClient(object):
         """
         Grab the queued data.
         """
-        point_list = []
-        while (True):
-            try:
-                in_string = self.socket.recv_string(zmq.NOBLOCK)
-            except zmq.error.Again:  #other endpoint is not connected.
-                logging.debug("ZMQ could not communicate with processor endpoint.")
-                break
-            if not in_string:
-                break
-            point = [float(val) for val in in_string.split(',')]
-            point_list.append([{"x":point[1], "y":point[2]+point[0]*PROFILE_OFFSET, "z":point[3], "i":255}])
-        logging.debug("Laser processing client recieved {} points".format(len(point_list)))
-        return point_list
+        in_string = self.socket.recv_string()
+        lines = [line.split(",")for line in in_string.split("\n") ][0:-1]
+        if len(lines) == 0:
+            return []
+        points = [ {"x": float(point[1]), "y":float(point[2]) + float(point[0])*PROFILE_OFFSET, "z":float(point[3]), "i":point[4] } for point in lines ]
+        logging.debug("Laser processing client recieved {} points".format(len(points)))
+        return points
 
 

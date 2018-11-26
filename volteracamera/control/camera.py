@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import zmq
-from threading import Thread
+import threading
 import logging
 import importlib
 from importlib import util
@@ -18,6 +18,7 @@ if picam_found:
     from picamera.array import PiRGBArray
 
 CAMERA_INTERFACE="ipc:///tmp/camera_thread"
+CAMERA_HIGH_WATER_MARK=10
 
 #RESOLUTION = (2592, 1944)
 #RESOLUTION = (3280, 2464)
@@ -29,7 +30,7 @@ FRAMERATE = 10
 SHUTTER_SPEED = 5000
 EXPOSURE_MODE = "off"
 
-class Camera(object):
+class Camera(threading.Thread):
     """
     Class that reads from the camera.
     """
@@ -38,6 +39,7 @@ class Camera(object):
         """
         Initialization of the camera.
         """
+        super().__init__()
         if picam_found:
             logging.info ("Starting Camera")
             self.camera = PiCamera()
@@ -49,16 +51,18 @@ class Camera(object):
             #time.sleep(3)
             #self.camera.shutter_speed = SHUTTER_SPEED
             #self.camera.exposure_mode = EXPOSURE_MODE
+            self.raw_capture = PiRGBArray(self.camera, size=(RESOLUTION[0], RESOLUTION[1])) 
+            self.frame = None
+            self.frame_mutex = threading.Lock()
             
         #set up zmq context and publishing port. Only works on Unix like systems.
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
-        self.socket.set_hwm(1)
+        self.socket.set_hwm(CAMERA_HIGH_WATER_MARK)
         self.socket.bind (CAMERA_INTERFACE)
 
         #set up the capture process
         self.stop_capture = False
-        self.capture_process = Thread (target = self._capture_continuous)
         logging.debug("Camera initialized.")
 
     def open(self):
@@ -94,8 +98,7 @@ class Camera(object):
         """
         Called to clean up camera context.
         """
-        self.stop_capture = True
-        self.capture_process.join()
+        self.stop()
         if picam_found:
             self.camera.close()
 
@@ -121,28 +124,50 @@ class Camera(object):
         """
         Capture images continuously from the camera.
         """
-        if picam_found:
-            raw_capture = PiRGBArray(self.camera, size=(RESOLUTION[0], RESOLUTION[1]))
-            for frame in self.camera.capture_continuous(raw_capture, format="rgb", use_video_port=True):
-                Camera._send_array (self.socket, frame.array)
-                logging.debug("Sent real image.")
-                raw_capture.truncate(0)
-                if self.stop_capture: 
-                    logging.debug("Capture stopped.")
-                    break
-        else:
-            while (True):
-                frame = Image.new(mode="RGB", size=(720, 1280))
-                imarr = np.asarray(frame)
-                imarr.flags.writeable = True
-                imarr[400, :, 2] = 128
-                Camera._send_array (self.socket, np.asarray(frame))
-                logging.debug("Sent simulated image.")
-                time.sleep(0.1) # slow down the capture to about 10fps
-                if self.stop_capture:
-                    logging.debug("Capture stopped.")
-                    break
+        while (True):
+            if not self.stop_capture:
+                if picam_found:
+                    for frame in self.camera.capture_continuous(self.raw_capture, format="rgb", use_video_port=True):
+                        Camera._send_array (self.socket, frame.array)
+                        logging.debug("Sent real image.")
+                        self.raw_capture.truncate(0)
+                        with self.frame_mutex:
+                            self.frame = frame
+                        if self.stop_capture: 
+                            logging.debug("Capture stopped.")
+                            break
+                else:
+                    while (True):
+                        frame = Image.new(mode="RGB", size=(1280, 720))
+                        imarr = np.asarray(frame)
+                        imarr.flags.writeable = True
+                        imarr[400, :, 2] = 128
+                        Camera._send_array (self.socket, np.asarray(frame))
+                        logging.debug("Sent simulated image.")
+                        time.sleep(0.5) # slow down the capture to about 10fps
+                        if self.stop_capture:
+                            logging.debug("Capture stopped.")
+                            break
+            else:
+                time.sleep(1)
 
+    def capture_single (self):
+        """
+        Capture a single image from the camera.
+        """
+        if picam_found:
+            #frame = self.camera.capture(self.raw_capture, format="rgb")
+            with self.frame_mutex:
+                Camera._send_array (self.socket, self.frame.array)
+            ##self.raw_capture.truncate(0)
+            logging.debug("Sent real image.")
+        else:
+            frame = Image.new(mode="RGB", size=(720, 1280))
+            imarr = np.asarray(frame)
+            imarr.flags.writeable = True
+            imarr[:, 400, 0] = 128
+            Camera._send_array (self.socket, np.asarray(frame))
+            logging.debug("Sent simulated image.")
 
     def run(self):
         """
@@ -150,7 +175,16 @@ class Camera(object):
         """
         logging.debug("Camera capture started.")
         self.stop_capture = False
-        self.capture_process.start()
+        self._capture_continuous()
+
+    def stop(self):
+        """
+        stop capturing
+        """
+        #self.stop_capture = True
+
+    def restart(self):
+        self.stop_capture = False
 
 class CameraReader():
     """
@@ -162,7 +196,7 @@ class CameraReader():
         """
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.SUB)
-        self.socket.set_hwm(1)
+        self.socket.set_hwm(CAMERA_HIGH_WATER_MARK)
         self.socket.connect(CAMERA_INTERFACE)
         self.socket.setsockopt(zmq.SUBSCRIBE, b"") #subscribe to all sensors. 
         logging.debug ( "Camera reader started." )

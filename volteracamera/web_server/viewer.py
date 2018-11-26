@@ -3,13 +3,13 @@ import logging
 from io import BytesIO
 import numpy as np
 
-from ..analysis.laser_line_finder import LaserProcessingClient 
-from . import get_processor
+from ..analysis.laser_line_finder import LaserProcessingClient, LaserProcessingServer
+from . import get_processor, get_cam
+from ..control.camera import Camera
 
 bp = Blueprint("viewer", __name__, url_prefix="/viewer")
 
 t = 0
-point_list = []
 def generate_test_points ():
     """
     Method that generates a set of test points.
@@ -28,15 +28,13 @@ def generate_points():
     TODO: Needs to be updated when the motion control is set up.
     """
     global t
-    global points
     laser_client = LaserProcessingClient()
     captured_points = laser_client.get_data()
     if not captured_points: 
         logging.debug("No new points are being sent to the client.")
         return None
-    point_list.append(captured_points)
-    logging.debug("{} points are being sent to client.".format (len(point_list)))
-    return point_list
+    logging.debug("{} points are being sent to client.".format (len(captured_points)))
+    return captured_points
 
 #routes
 @bp.route('/viewer')
@@ -59,11 +57,14 @@ def start_laser():
     """
     Start collecting image data
     """
+    global t
+    t = 0
     processor = get_processor()
-    logging.debug("Processor stop requested.")
+    logging.debug("Processor start requested.")
     if not processor.is_alive():
-        logging.debug ("Processor stop sent.")
+        logging.debug ("Processor start sent.")
         processor.start()
+    processor.restart()
     return "OK"
 
 @bp.route('stop')
