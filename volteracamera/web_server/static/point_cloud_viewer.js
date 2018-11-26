@@ -3,7 +3,22 @@
  * Code for a 3D point cloud viewer
  */
 
-"use strict";
+//"use strict";
+
+//Turn off the image sidebar
+window.onload = function () {
+    var sidebar = document.getElementById('image-sidebar');
+    if (sidebar !== null) {
+        sidebar.parentNode.removeChild(sidebar);
+    }
+    var sidebar_script = document.getElementById('image-sidebar-script');
+    if (sidebar_script !== null) {
+        sidebar_script.parentNode.removeChild(sidebar_script);
+    }
+};
+
+//Add control buttons to the top of the viewer
+
 
 if (WEBGL.isWebGLAvailable() === false) {
     document.body.appendChild(WEBGL.getWebGLErrorMessage());
@@ -28,25 +43,32 @@ if (WEBGL.isWebGLAvailable() === false) {
 
 var PointCloudViewer = function () {
 
-    var scene, camera, renderer, controls, hemiLight, dirLight;
+    var scene, camera, renderer, controls, hemiLight, dirLight, viewerDiv;
 
     const pointSize = 0.05;
     const pointsName = "points";
 
-    function init() {
+    function init(viewerDivName = "") {
+        viewerDiv = document.getElementById(viewerDivName);
+
+        if (viewerDiv === null) {
+            viewerDiv = window;
+        }
+
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //Real view, scaled with distance
+        camera = new THREE.PerspectiveCamera(75, viewerDiv.innerWidth / viewerDiv.innerHeight, 0.1, 1000); //Real view, scaled with distance
         camera.position.set(0, 0, 10);
         camera.lookAt(scene.position);
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        renderer.setSize(viewerDiv.innerWidth, viewerDiv.innerHeight);
+        viewerDiv.innerHTML = "";
+        viewerDiv.appendChild(renderer.domElement);
 
         //Resize
         window.addEventListener("resize", function () {
-            var width = window.innerWidth;
-            var height = window.innerHeight;
+            var width = viewerDiv.innerWidth;
+            var height = viewerDiv.innerHeight;
             renderer.setSize(width, height);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
@@ -61,8 +83,8 @@ var PointCloudViewer = function () {
         controls.noPan = false;
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
-        controls.keys = [ 65, 83, 68 ];
-        controls.addEventListener( 'change', renderScene );
+        controls.keys = [65, 83, 68];
+        controls.addEventListener('change', renderScene);
 
         scene.background = new THREE.Color().setHSL(0.6, 0, 1);
         scene.fog = new THREE.Fog(scene.background, 1, 5000);
@@ -101,12 +123,11 @@ var PointCloudViewer = function () {
         renderer.render(scene, camera);
     };
 
-    var points = [];
+    var points = [{"x":0, "y":0, "z":0, "i":0}];
 
     function addPoints(points_to_add) {
         points = points.concat(points_to_add);
         generatePointCloud();
-        clearPoints();
     };
 
     function clearPoints() {
@@ -133,20 +154,42 @@ var PointCloudViewer = function () {
             colours[3 * i + 2] = 0;
         }
 
-        geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.addAttribute('color', new THREE.BufferAttribute(colours, 3));
-        geometry.computeBoundingBox();
+        if (numPoints > 0) {
+            geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.addAttribute('color', new THREE.BufferAttribute(colours, 3));
+            geometry.computeBoundingBox();
 
-        var material = new THREE.PointsMaterial({ size: pointSize, vertexColors: THREE.VertexColors });
-        var pointCloud = new THREE.Points(geometry, material);
-        pointCloud.name = pointsName;
+            var material = new THREE.PointsMaterial({ size: pointSize, vertexColors: THREE.VertexColors });
+            var pointCloud = new THREE.Points(geometry, material);
+            pointCloud.name = pointsName;
 
-        scene.add(pointCloud);
+            scene.add(pointCloud);
+        }
     };
 
+    var capture_points = false;
+    function stopPointCapture() {
+        const stop_url = "/viewer/stop";
+        fetch (stop_url).then(function () {
+            capture_points = false;
+        });
+    }
+
     function startPointCapture() {
+        const start_url = "/viewer/start";
+        if (!capture_points) {
+            clearPoints();
+            capture_points = true;
+            fetch(start_url).then(getPoints());
+        }
+    }
+
+    function getPoints() {
         const url = "/viewer/points";
 
+        if (!capture_points) {
+            return;
+        }
         fetch(url, { cache: "no-store" }).then(function (response) {
             if (response.ok) {
                 return response.json();
@@ -155,7 +198,7 @@ var PointCloudViewer = function () {
             };
         }).then(function (myJson) {
             addPoints(myJson);
-            startPointCapture();
+            getPoints();
         }).catch(function (error) {
             console.log("There was a problem with the request: " + error.message);
         });
@@ -181,49 +224,13 @@ var PointCloudViewer = function () {
 
         //Point getting logic
         startPointCapture: startPointCapture,
+        stopPointCapture: stopPointCapture,
     };
 
 };
 
-//Turn off the image sidebar
-var sidebar = document.getElementById('image-sidebar').style.display = "none";
-
 var viewer = PointCloudViewer();
-viewer.init()
-//Start the viewer communication with the server.
+viewer.init("split-content")
 viewer.startPointCapture();
 //start the drawing loop
 viewer.animate();
-
-//Create the shape
-//      var geometry = new THREE.BoxGeometry(1, 1, 1);
-//      var cubeMaterials = [
-//        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("img/FamilyDice/Tessa.png"), side: THREE.DoubleSide }), //Right
-//        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("img/FamilyDice/Evan.png"), side: THREE.DoubleSide }), //Left
-//        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("img/FamilyDice/Marja.png"), side: THREE.DoubleSide }), //Top
-//        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("img/FamilyDice/Ryan.png"), side: THREE.DoubleSide }), //Botton
-//        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("img/FamilyDice/Tycho.png"), side: THREE.DoubleSide }), //Front
-//        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("img/FamilyDice/Noelle.png"), side: THREE.DoubleSide }) //Back
-//      ];     
-// 
-//      //create material, colour or image texture
-//      //var material = new THREE.MeshBasicMaterial( {color: 0xFFFFFF, wireframe: true} );
-//      var cube = new THREE.Mesh (geometry, cubeMaterials);
-//
-//      scene.add( cube );
-//
-//      camera.position.z = 2;
-//
-//      //Lighting
-//      var ambientLight = new THREE.AmbientLight ( 0xFFFFFF, 0.6 );
-//      scene.add (ambientLight);
-//      var light1 = new THREE.PointLight (0xFF0044, 0.4, 50);
-//      //scene.add (light1);
-//      var light2 = new THREE.PointLight (0xFF4400, 0.4, 50);
-//      //scene.add (light2);
-//      var light3 = new THREE.PointLight (0x44FF00, 0.4, 50);
-//      //scene.add (light3);
-// 
-
-
-

@@ -1,17 +1,22 @@
 import os
 
+from functools import partial
+
 from flask import Flask
 from ..control.camera import Camera
 from ..control.laser import Laser
+from ..analysis.laser_line_finder import LaserProcessingServer, Undistort
+from ..analysis.plane import Plane
+
+DEFAULT_LASER_PLANE_FILE="laser.json"
+DEFAULT_CAMERA_FILE="camera.json"
 
 #initialize global camera and laser objects.
 cam = None
 laser = None
+processor = None
 data = {
         "images": [],
-        "intrinsics": None,
-        "distortion": None,
-        "laser_plane":None
     }
 
 def get_cam():
@@ -33,6 +38,15 @@ def get_laser():
         laser = Laser()
     return laser
 
+def get_processor():
+    """
+    Global Accessor for the processor.
+
+    This is created during initialization.
+    """
+    global processor
+    return processor
+
 def get_data_store():
     """
     Access the global data storage.
@@ -40,12 +54,21 @@ def get_data_store():
     global data
     return data
 
-def initialize():
+def initialize( file_path ):
+    """
+    Called on first web server request. This starts all the different global processes.
+    """
+    global processor
     #Instantiate and start the camera
     cam = get_cam()
     cam.run()
     #Intantiate and start the laser
-    laser = get_laser()
+    _ = get_laser()
+    #load in the calibration files
+    cam_params = Undistort.read_json_file(os.path.join( file_path, DEFAULT_CAMERA_FILE))
+    laser_plane = Plane.read_json_file(os.path.join(file_path, DEFAULT_LASER_PLANE_FILE))   
+    #initialize the laser processor
+    processor = LaserProcessingServer (cam_params, laser_plane)
 
 # prevent cached responses
 def add_header(r):
@@ -88,7 +111,7 @@ def create_app(test_config=None):
     application.register_blueprint(controls.bp)
     application.register_blueprint(calibration.bp)
     application.register_blueprint(viewer.bp)
-
-    application.before_first_request (initialize)
+    
+    application.before_first_request (partial (initialize, application.instance_path))
     application.after_request (add_header)
     return application

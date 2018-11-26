@@ -24,6 +24,9 @@ export function loadSidebar () {
 
   var url_sidebar = "/load_sidebar";
   var sidebar = document.getElementById('image-sidebar-contents');
+  if (sidebar === null) {
+    return;
+  }
   //Clear out the existing elements.
   while (sidebar.firstChild) {
     sidebar.removeChild(sidebar.firstChild);

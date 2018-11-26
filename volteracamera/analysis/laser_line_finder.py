@@ -4,13 +4,25 @@ of sensor pixel positions. As input, it takes a greyscale image in a numpy array
 """
 import numpy as np
 import cv2
-from multiprocessing import Pool
+import zmq
+import threading
+from multiprocessing import Process, Pool
+from volteracamera.analysis.undistort import Undistort
+from volteracamera.analysis.plane import Plane
+from volteracamera.analysis.point_projector import PointProjector 
+from volteracamera.control.camera import CameraReader
+
+
+PUBLISHING_PROTOCOL = "tcp"
+PUBLISHING_PORT = "2223"
+PROFILE_HIGH_WATER_MARK = 10000
 
 KERNEL=51
 FILTER_SMOOTH = (np.zeros(KERNEL) + 1.0)/KERNEL
 FILTER_SHARPEN = (np.zeros(KERNEL) - 1.0)
 FILTER_SHARPEN[int(KERNEL/2)] = KERNEL 
 INTERVAL = 1
+PROFILE_OFFSET = 0.001 #move each profile over by one mm in the y direction.
 
 class LaserLineFinder (object):
     """
@@ -154,3 +166,94 @@ def preview_image():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     cv2.imwrite("out.jpg", image)
+
+class LaserProcessingServer (threading.Thread):
+    """
+    Server for analyzing data captured by the camera server.
+    """
+
+    def __init__(self, camera_parameters, laser_plane):
+        """
+        Set up the laser analysis server.
+        """
+        self.point_projector = PointProjector(camera_parameters, laser_plane)
+        self.camera_reader = CameraReader()
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PUB)
+        socket_address ="{}://*:{}".format(PUBLISHING_PROTOCOL, PUBLISHING_PORT) 
+        self.socket.set_hwm(PROFILE_HIGH_WATER_MARK)
+        self.socket.bind(socket_address.encode("utf-8"))
+        self.stop_capture = False
+        self.save_data_flag = False
+        self.output_file = ""
+
+    def run (self):
+        self.stop_capture = False
+        with LaserLineFinder() as finder:
+            image_count = 0
+            while ( not self.stop_capture ):
+                image = self.camera_reader.capture()
+                print ("Captured Image : {}".format(image_count))
+                image_points = finder.process(image[:,:,2]) 
+                image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
+                data_points = self.point_projector.project (image_points_full)
+
+                for point in data_points:
+                    self.socket.send_string("{}, {}, {}, {}".format(image_count, point[0], point[1], point[2]))        
+                self.socket.send_string("")
+
+                if self.save_data_flag:
+                    with open(self.output_file, "a") as fid:
+                        for point in data_points:
+                            fid.write("{}, {}, {}, {}\n".format(image_count, point[0], point[1], point[2]))
+
+                image_count += 1
+
+    def stop (self):
+        """
+        Stop the process in another thread.
+        """
+        self.stop_capture = True
+        if self.is_alive():
+            self.join()
+
+    def save_data (self, output_file):
+        """
+        Set up the data saving.
+        """
+        self.output_file = output_file
+        self.save_data_flag = True
+
+class LaserProcessingClient(object):
+    """
+    Recieve laser data.
+    """ 
+
+    def __init__(self, ip_address: str = "127.0.0.1") -> None:
+        """
+        Set up a reader for the processed laser data.
+        """
+        socket_address ="{}://{}:{}".format(PUBLISHING_PROTOCOL, ip_address, PUBLISHING_PORT)
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.SUB)
+        self.socket.connect (socket_address.encode("utf-8"))
+        self.socket.set_hwm(PROFILE_HIGH_WATER_MARK)
+        self.socket.setsockopt(zmq.SUBSCRIBE, "".encode("utf-8")) #no filtering of incoming data.
+
+    def get_data(self)->list:
+        """
+        Grab the queued data.
+        """
+        point_list = []
+        while (True):
+            try:
+                in_string = self.socket.recv_string(zmq.NOBLOCK)
+            except zmq.error.Again:  #other endpoint is not connected.
+                break
+            if not in_string:
+                break
+            point = [float(val) for val in in_string.split(',')]
+            point_list.append([{"x":point[1], "y":point[2]+point[0]*PROFILE_OFFSET, "z":point[3], "i":255}])
+        return point_list
+
+

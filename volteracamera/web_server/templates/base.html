@@ -17,6 +17,7 @@
   {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
   {% endfor %}
+  <script id="image-sidebar-script" src="{{ url_for('static', filename='image_sidebar.js') }}" type="module"></script> 
 
   <div id="split-content">
     <div id="image-sidebar">
@@ -32,5 +33,4 @@
 
   </div> <!-- split-content -->
 
-  <script src="{{ url_for('static', filename='image_sidebar.js') }}" type="module"></script> 
 </section> <!-- content -->

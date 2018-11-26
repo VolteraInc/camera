@@ -119,12 +119,13 @@ class Camera(object):
         """
         Capture images continuously from the camera.
         """
-        raw_capture = PiRGBArray(self.camera, size=(RESOLUTION[0], RESOLUTION[1]))
-        for frame in self.camera.capture_continuous(raw_capture, format="rgb", use_video_port=True):
-            Camera._send_array (self.socket, frame.array)
-            raw_capture.truncate(0)
-            if self.stop_capture: 
-                break
+        if picam_found:
+            raw_capture = PiRGBArray(self.camera, size=(RESOLUTION[0], RESOLUTION[1]))
+            for frame in self.camera.capture_continuous(raw_capture, format="rgb", use_video_port=True):
+                Camera._send_array (self.socket, frame.array)
+                raw_capture.truncate(0)
+                if self.stop_capture: 
+                    break
 
     def run(self):
         """

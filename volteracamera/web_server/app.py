@@ -35,7 +35,6 @@ def load_sidebar():
                             "thumbnail": url_for('.capture_image_thumb', num=str(i)),
                             "image": url_for('.capture_image_full', num=str(i))
                         })
-    print (json_data)
     return jsonify (json_data)
 
 @bp.route("/capture_image_thumb/<num>")
