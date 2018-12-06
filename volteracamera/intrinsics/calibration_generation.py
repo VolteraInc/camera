@@ -32,12 +32,15 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     homography given by rvec and tvec. rvec is in angle axis form.
     """
     norm = np.sqrt(np.dot (rvec, rvec))
-    axis = rvec/norm
+    if np.abs(norm) > 0.0000001:
+        axis = rvec/norm
+    else:
+        axis = [1, 0, 0]
     rot_matrix = tfd.axangles.axangle2mat(axis, norm)
     if len(image.shape) == 3:    
-        width, height, _ = image.shape
+        height, width, _ = image.shape #python matrix shape is height, width order.
     else:
-        width, height = image.shape 
+        height, width = image.shape 
     center = np.array([width/2, height/2, 0])
     f = 250
     cam_matrix = np.array([[f, 0, center[0]],
@@ -51,10 +54,8 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     transformed_points = [np.dot(rot_matrix, point-offset)+offset + tvec  for point in points]
     projected_points = np.array([np.dot(cam_matrix, point) for point in transformed_points], dtype="float32")
     projected_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in projected_points], dtype="float32")
-    #projected_points = np.array([[point[0], point[1]] for point in points], dtype="float32")
     object_points = np.array([np.dot(cam_matrix, point) for point in points], dtype="float32")
     object_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in object_points], dtype="float32")
-    #object_points = np.array([[point[0], point[1]] for point in transformed_points], dtype="float32")
     
     H = cv2.getPerspectiveTransform(object_points, projected_points)
     warped_image = cv2.warpPerspective(image, H, (width, height), borderValue=(255, 255, 255))

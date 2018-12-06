@@ -19,14 +19,6 @@ from .line import Line
 
 DISTANCE_TO_SURFACE = 0.015
 LAYER_THICKNESS = 0.0001651
-TAPE_LAYERS = np.arange (6, 0, -1) * LAYER_THICKNESS
-
-STARTING_LASER_PLANE_NORMAL = [0, 0, 1.0]
-STARTING_LASER_PLANE_POINT = [0, 0, 0]
-MEASURED_PLANE_NORMAL = [0, 0, -1.0] #Assume the target planes are normal to the sensor.
-
-INITIAL_ROTATION = [-np.pi*3/4, 0, 0]
-INITIAL_POSITON = [0.0, -0.0075, 0.0075]
 
 #parameter locations for each fitted parameter
 LP_RX = 0
@@ -37,7 +29,8 @@ CAL_PLANE_RX = 4
 CAL_PLANE_RY = 5
 CAL_PLANE_RZ = 6
 CAL_PLANE_OFFSET_Z = 7
-INITIAL_PARAMS = [ np.sin(45 * np.pi / 180), 0, 0, -0.03, 0, 0, 0, -0.04 ]
+INITIAL_PARAMS = [ np.radians(180 - 45), 0, 0, 0.04, np.radians(180), 0, 0, DISTANCE_TO_SURFACE ]
+
 
 
 class LaserFitter(object):
@@ -79,8 +72,8 @@ class LaserFitter(object):
         laser_transform = Transform (rotation = laser_rot, translation = laser_point)
         laser_plane = laser_transform.transform_plane(Plane()) 
         
-        #planes_rot = [params[CAL_PLANE_RX], params[CAL_PLANE_RY], params[CAL_PLANE_RZ]]
-        planes_rot = [0, 0, 0]
+        planes_rot = [params[CAL_PLANE_RX], params[CAL_PLANE_RY], params[CAL_PLANE_RZ]]
+        #planes_rot = [np.radians(0), 0, 0]
         planes_point = [0, 0, params[CAL_PLANE_OFFSET_Z]]
         planes_transform = Transform(rotation=planes_rot, translation = planes_point)
         target_planes = [planes_transform.transform_plane(Plane(point_on_plane=[0, 0, offset])) for offset in plane_offsets]
