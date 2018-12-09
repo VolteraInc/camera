@@ -7,9 +7,10 @@ import cv2
 import numpy as np
 from pathlib import Path
 from volteracamera.analysis.undistort import Undistort
-from volteracamera.intrinsics.circles_calibration import run_calibration
+from volteracamera.intrinsics.circles_calibration import run_calibration, generate_symmetric_circle_grid
 
 FILTER_WIDTH=1
+PATTERN_SIZE=(5, 4, 150)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -24,6 +25,9 @@ if __name__=="__main__":
     image_files = glob.glob(str(input_dir / "*"))
 
     image_list = []
+
+    _, points, pattern_size = generate_symmetric_circle_grid(*PATTERN_SIZE)
+
     for an_image in image_files:
 
         try:
@@ -34,7 +38,7 @@ if __name__=="__main__":
         except:
             print ("Failed to load " + an_image)
 
-    out_cal = run_calibration (image_list, args.display)
+    out_cal = run_calibration (image_list, points, pattern_size, args.display)
 
     print (out_cal)
 

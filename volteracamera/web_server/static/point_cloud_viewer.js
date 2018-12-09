@@ -3,7 +3,7 @@
  * Code for a 3D point cloud viewer
  */
 
-//"use strict";
+"use strict"
 
 //Turn off the image sidebar
 window.onload = function () {
@@ -18,8 +18,6 @@ window.onload = function () {
 };
 
 //Add control buttons to the top of the viewer
-
-
 if (WEBGL.isWebGLAvailable() === false) {
     document.body.appendChild(WEBGL.getWebGLErrorMessage());
 }

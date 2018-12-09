@@ -27,7 +27,7 @@ def test_intrinsics_calibration():
     """
     Meta test of the entire process
     """
-    image, points, pattern_size = generate_symmetric_circle_grid(8, 8, 150)
+    image, points, pattern_size = generate_symmetric_circle_grid(5, 4, 150)
     images = generate_random_cal_images(image, 30)
     assert images[0].shape == image.shape
     

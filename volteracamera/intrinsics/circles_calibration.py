@@ -45,8 +45,8 @@ def generate_symmetric_circle_grid(size_x: int, size_y: int, circle_spacing: int
         for i in range(size_x):
             points.append(
                 np.array([int(i*circle_spacing), int(j*circle_spacing), 0]))
-    image = np.zeros((size_y*circle_spacing + 2*circle_spacing,
-                      size_x*circle_spacing + 2*circle_spacing), np.uint8) + 255
+    image = np.zeros((size_y*circle_spacing + circle_spacing,
+                      size_x*circle_spacing + circle_spacing), np.uint8) + 255
 
     for center in points:
         [x, y, _] = center
@@ -115,7 +115,7 @@ def run_calibration(image_list: list, object_points_in: list, pattern_size: tupl
     object_points = np.asarray(object_points).astype('float32')
     all_corners = np.asarray(all_corners).astype('float32')
     ret, camera_matrix, distortion, rvecs, tvecs = cv2.calibrateCamera(
-        object_points, all_corners, image_size, CAMERA_MATRIX_GUESS, DISTORTION_GUESS) #, flags=cv2.CALIB_USE_INTRINSIC_GUESS)
+        object_points, all_corners, image_size, CAMERA_MATRIX_GUESS, DISTORTION_GUESS)#, flags=cv2.CALIB_USE_INTRINSIC_GUESS)
 
     # rvecs, tvecs, calibration[3], calibration[4])
     return Undistort(camera_matrix, distortion)

@@ -1,15 +1,22 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Camera Preview{% endblock %}</h1>
+<h1>{% block title %}Camera Preview{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 
-<button id="capture-button"  onclick="captureImage()">Capture Image</button> 
+<button id="capture-button">Capture Image</button>
 
 <div id="preview"><img id="preview_image" width=100%></div>
 
 
-<script src="{{ url_for('static', filename='cam_preview.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='cam_preview.js') }}"></script>
+<script>
+  //Attach click event to button.
+  functions_on_load.push( function () {
+    var capture_button = document.getElementById("capture-button");
+    capture_button.addEventListener("click", ()=>{CamPreview.captureImage(Sidebar.loadSidebar);}, false);
+  } );
+</script>
 {% endblock %}

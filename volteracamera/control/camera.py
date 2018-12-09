@@ -138,7 +138,7 @@ class Camera(threading.Thread):
                             break
                 else:
                     while (True):
-                        frame = Image.new(mode="RGB", size=(1280, 720))
+                        frame = Image.new(mode="RGB", size=RESOLUTION)
                         imarr = np.asarray(frame)
                         imarr.flags.writeable = True
                         imarr[400, :, 2] = 128
@@ -160,7 +160,7 @@ class Camera(threading.Thread):
                 frame = self.frame.copy()
             return frame
         else:
-            frame = Image.new(mode="RGB", size=(720, 1280))
+            frame = Image.new(mode="RGB", size=(RESOLUTION))
             imarr = np.asarray(frame)
             imarr.flags.writeable = True
             imarr[:, 400, 0] = 128

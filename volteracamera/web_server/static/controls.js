@@ -1,117 +1,129 @@
 "use strict"
 
-//Grab the needed controls
-var laserIntensityValue = document.getElementById("laser-intensity-value");
-var sensorExposureValue = document.getElementById("sensor-exposure-value");
-var laserStateCheckbox = document.getElementById("laser-toggle");
-var laserIntensitySlider = document.getElementById("laser-power-adjust");
-var sensorExposureSlider = document.getElementById("sensor-exposure-adjust");
+var Controls = Controls || {};
 
-const laserURL = '/controls/laser_state';
-const sensorURL = '/controls/sensor_state';
+Controls.createNS = (function (namespace) {
 
-//Tie together the slider controls.
-function setupSliderControl ( sliderElement, textElement, requestBuilder, responseHandler ) {
+  //Grab the needed controls
+  var laserIntensityValue = document.getElementById("laser-intensity-value");
+  var sensorExposureValue = document.getElementById("sensor-exposure-value");
+  var laserStateCheckbox = document.getElementById("laser-toggle");
+  var laserIntensitySlider = document.getElementById("laser-power-adjust");
+  var sensorExposureSlider = document.getElementById("sensor-exposure-adjust");
 
-  var slider = sliderElement;
-  var text = textElement;
-  var requestBuild = requestBuilder;
-  var responseFunc = responseHandler
+  const laserURL = '/controls/laser_state';
+  const sensorURL = '/controls/sensor_state';
 
-  //update the value whenever the slider changes.
-  slider.onmouseup = function() {
-     fetchState( requestBuild(), responseFunc ); 
-  }
+  //Tie together the slider controls.
+  function setupSliderControl(sliderElement, textElement, requestBuilder, responseHandler) {
 
-  slider.oninput = function() {
-     text.innerHTML = slider.value; 
-  }
+    var slider = sliderElement;
+    var text = textElement;
+    var requestBuild = requestBuilder;
+    var responseFunc = responseHandler
 
-  function setValue ( value ) {
-    if ((value > slider.max) || (slider.min < slider.min)) {
-      return;
+    //update the value whenever the slider changes.
+    slider.onmouseup = function () {
+      fetchState(requestBuild(), responseFunc);
     }
-    text.innerHTML = value;
-    slider.value = value;
-  };
 
-  return setValue;
-}
+    slider.oninput = function () {
+      text.innerHTML = slider.value;
+    }
 
-//Sets up the callbacks and state updates needed for the laser slider (including the fetch logic)
-var setLaserValue = setupSliderControl (laserIntensitySlider, laserIntensityValue, getLaserRequest, function(data) {
-  laserIntensitySlider.value = data.intensity;
-  laserIntensityValue.innerHTML = data.intensity;
-  laserStateCheckbox.checked = data.on_off; 
-});
+    function setValue(value) {
+      if ((value > slider.max) || (slider.min < slider.min)) {
+        return;
+      }
+      text.innerHTML = value;
+      slider.value = value;
+    };
 
-//Set up the sensor slider callback
-var setSensorValue = setupSliderControl (sensorExposureSlider, sensorExposureValue, getSensorRequest, function(data) {
-  sensorExposureSlider.value = data.exposure;
-  sensorExpsoureValue.innerHTML = data.exposure;
-});
+    return setValue;
+  }
 
-laserStateCheckbox.oninput = function () {
-  fetchState ( getLaserRequest(), function(data) {
+  //Sets up the callbacks and state updates needed for the laser slider (including the fetch logic)
+  var setLaserValue = setupSliderControl(laserIntensitySlider, laserIntensityValue, getLaserRequest, function (data) {
     laserIntensitySlider.value = data.intensity;
     laserIntensityValue.innerHTML = data.intensity;
-    laserStateCheckbox.checked = data.on_off;  
+    laserStateCheckbox.checked = data.on_off;
   });
-};
 
-//Get the laser json data to send in requests to the server.
-function getLaserRequest () {
-  let data = {
-    on_off : laserStateCheckbox.checked,
-    intensity : laserIntensitySlider.value
-  };
-  let request = new Request(
-    laserURL,
-    {method: 'POST',
-     headers: new Headers({'Content-Type':'application/json'}),
-     body: JSON.stringify(data),
-     cache: 'no-store'
+  //Set up the sensor slider callback
+  var setSensorValue = setupSliderControl(sensorExposureSlider, sensorExposureValue, getSensorRequest, function (data) {
+    sensorExposureSlider.value = data.exposure;
+    sensorExpsoureValue.innerHTML = data.exposure;
+  });
+
+  laserStateCheckbox.oninput = function () {
+    fetchState(getLaserRequest(), function (data) {
+      laserIntensitySlider.value = data.intensity;
+      laserIntensityValue.innerHTML = data.intensity;
+      laserStateCheckbox.checked = data.on_off;
     });
-  return request;
-}
-
-//Get the sensor json data to send in requests to the server.
-function getSensorRequest () {
-  let data = {
-    exposure : sensorExposureSlider.value
   };
-  let request = new Request(
-    sensorURL,
-    {method: 'POST',
-     headers: new Headers({'Content-Type':'application/json'}),
-     body: JSON.stringify(data),
-     cache: 'no-store'
-    });
-  return request;
-}
+
+  //Get the laser json data to send in requests to the server.
+  function getLaserRequest() {
+    let data = {
+      on_off: laserStateCheckbox.checked,
+      intensity: laserIntensitySlider.value
+    };
+    let request = new Request(
+      laserURL,
+      {
+        method: 'POST',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data),
+        cache: 'no-store'
+      });
+    return request;
+  }
+
+  //Get the sensor json data to send in requests to the server.
+  function getSensorRequest() {
+    let data = {
+      exposure: sensorExposureSlider.value
+    };
+    let request = new Request(
+      sensorURL,
+      {
+        method: 'POST',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data),
+        cache: 'no-store'
+      });
+    return request;
+  }
 
 
-//This function fetches the various states, setting a new state if the request if build properly.
-//Called on page load to get the initial state and every time the state changes.
-function fetchState ( request, valueChangeHandler ) {
-  fetch(request)
-    .then( function (response) {
-      response.json()
-        .then( function (data) {valueChangeHandler(data)} )
+  //This function fetches the various states, setting a new state if the request if build properly.
+  //Called on page load to get the initial state and every time the state changes.
+  function fetchState(request, valueChangeHandler) {
+    fetch(request)
+      .then(function (response) {
+        response.json()
+          .then(function (data) { valueChangeHandler(data) })
       })
-    .catch(function (error) {
-      console.log('Request failed', error);
-    });
-};
+      .catch(function (error) {
+        console.log('Request failed', error);
+      });
+  };
+
+  return {
+    fetchState: fetchState
+  };
+
+})();
 
 
 //load initial laser values with an empty request.
-fetchState (new Request(laserURL, {method: 'POST', cache: 'no-store'}), function(data) {
+Controls.fetchState(new Request(laserURL, { method: 'POST', cache: 'no-store' }), function (data) {
   laserStateCheckbox.checked = data.on_off;
-  setLaserValue (data.intensity);
+  setLaserValue(data.intensity);
 });
 //load initial sensor values with an empty request.
-fetchState (new Request(sensorURL, {method: 'POST', cache: 'no-store'}), function(data) {
-  setSensorValue (data.exposure);
+Controls.fetchState(new Request(sensorURL, { method: 'POST', cache: 'no-store' }), function (data) {
+  setSensorValue(data.exposure);
 });
 

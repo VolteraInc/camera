@@ -4,31 +4,48 @@
 <nav>
   <h1><a href="{{ url_for('main.index') }}">Voltera Laser Capture/Control System</a></h1>
   <ul>
-      <li><a href="{{ url_for('controls.controls') }}">Controls</a>
-      <li><a href="{{ url_for('controls.preview') }}">Preview</a>
-      <li><a href="{{ url_for('calibration.index') }}">Calibration</a>
-      <li><a href="{{ url_for('viewer.viewer') }}">Laser Viewer</a>
+    <li><a href="{{ url_for('controls.controls') }}">Controls</a>
+    <li><a href="{{ url_for('controls.preview') }}">Preview</a>
+    <li><a href="{{ url_for('calibration.index') }}">Calibration</a>
+    <li><a href="{{ url_for('viewer.viewer') }}">Laser Viewer</a>
   </ul>
 </nav>
 <section class="content">
+
   <header>
     {% block header %}{% endblock %}
   </header>
   {% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
+  <div class="flash">{{ message }}</div>
   {% endfor %}
-  <script id="image-sidebar-script" src="{{ url_for('static', filename='image_sidebar.js') }}" type="module"></script> 
+  <script id="image-sidebar-script" src="{{ url_for('static', filename='image_sidebar.js') }}"></script>
+  <script>
+    //Set up page elements and actions.
+    var functions_on_load = [function () {
+      Sidebar.loadSidebar();
+
+      var sidebar_element = document.getElementById("toggle-sidebar");
+      sidebar_element.addEventListener("click", Sidebar.clickNav, false);
+
+      Sidebar.openNav();
+    }];
+    window.onload = function () {
+      functions_on_load.forEach(function(element){element();});
+    };
+  </script>
 
   <div id="split-content">
     <div id="image-sidebar">
-      <a href="javascript:void(0)" id="toggle-sidebar" onclick="openNav()">></a>
-        <div id="hideable-images">
-            <h3><ul>Saved Images</ul></h3>
-        </div>
-        <div id="image-sidebar-contents"></div>
+      <a id="toggle-sidebar">></a>
+      <div id="hideable-images">
+        <h3>
+          <ul>Saved Images</ul>
+        </h3>
+      </div>
+      <div id="image-sidebar-contents"></div>
     </div> <!-- image-sidebar -->
     <div id="content">
-      {% block content %}{% endblock %} 
+      {% block content %}{% endblock %}
     </div> <!-- content -->
 
   </div> <!-- split-content -->

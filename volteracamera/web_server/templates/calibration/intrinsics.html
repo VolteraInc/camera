@@ -9,7 +9,7 @@ img {
   width: 150px;
 }
 font {
-  size: 7;
+  size: 20;
 }
 </style>
 </head>
@@ -25,7 +25,7 @@ font {
 <img src="{{ image_url }}" class="center">
 
 {% if next_url != None %}
-<a href="{{ next_url }}">></a>
+<a id="next_url_link" href="{{ next_url }}">></a>
 </h1>
 {% endif %}
 </span>
