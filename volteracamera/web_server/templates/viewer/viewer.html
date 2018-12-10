@@ -1,23 +1,50 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Laser Point Cloud Viewer{% endblock %}</h1>
-  <style>
-    body {margin: 0; };
-    canvas { 
-      width: 100% 
-    };
-  </style>
+<h1>{% block title %}Laser Point Cloud Viewer{% endblock %}</h1>
+<style>
+  body {
+    margin: 0;
+  };
+
+  canvas {
+    width: 100%
+  };
+</style>
 {% endblock %}
 
 {% block content %}
-  <script src="{{ url_for('static', filename='three.js') }}""></script>
-  <script src="{{ url_for('static', filename='WebGL.js') }}"></script>
-  <script src="{{ url_for('static', filename='TrackballControls.js') }}""></script>
-
-  <script src="{{ url_for('static', filename='point_cloud_viewer.js') }}"></script>
-
-  <button id="start" onclick="viewer.startPointCapture()" >Start</button>
-  <button id="stop" onclick="viewer.stopPointCapture()">Stop</button>
 {% endblock %}
-   
+
+{% block viewer %}
+<div id="viewer_container">
+    
+  </div>
+  <script src="{{ url_for('static', filename='three.js') }}""></script>
+  <script src="
+  {{ url_for('static', filename='WebGL.js') }}"></script>
+  <script src="
+  {{ url_for('static', filename='TrackballControls.js') }}""></script>
+
+<script>
+    //Turn off the image sidebar
+    functions_on_load.push ( function () {
+        var sidebar_layout = document.getElementById('split-content')
+        if (sidebar_layout !== null) {
+            sidebar_layout.parentNode.removeChild(sidebar_layout);
+        }
+      } );
+        // var sidebar = document.getElementById('image-sidebar');
+        // if (sidebar !== null) {
+        //     sidebar.parentNode.removeChild(sidebar);
+        // }
+        // var sidebar_script = document.getElementById('image-sidebar-script');
+        // if (sidebar_script !== null) {
+        //     sidebar_script.parentNode.removeChild(sidebar_script);
+        // }
+        
+    </script>
+
+<script src="{{ url_for('static', filename='point_cloud_viewer.js') }}"></script>
+
+{% endblock %}

@@ -6,15 +6,15 @@ var Sidebar = Sidebar || {};
 //window.loadSidebar = Sidebar.loadSidebar;
 
 Sidebar = (function () {
-  
+
   var is_expanded = true;
 
   function clickNav() {
-      if (is_expanded) {
-        closeNav();
-      } else {
-        openNav();
-      }
+    if (is_expanded) {
+      closeNav();
+    } else {
+      openNav();
+    }
   };
 
   function openNav() {
@@ -98,5 +98,5 @@ Sidebar = (function () {
     clickNav: clickNav
   };
 
-}) ();
+})();
 

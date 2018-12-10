@@ -5,18 +5,6 @@
 
 "use strict"
 
-//Turn off the image sidebar
-window.onload = function () {
-    var sidebar = document.getElementById('image-sidebar');
-    if (sidebar !== null) {
-        sidebar.parentNode.removeChild(sidebar);
-    }
-    var sidebar_script = document.getElementById('image-sidebar-script');
-    if (sidebar_script !== null) {
-        sidebar_script.parentNode.removeChild(sidebar_script);
-    }
-};
-
 //Add control buttons to the top of the viewer
 if (WEBGL.isWebGLAvailable() === false) {
     document.body.appendChild(WEBGL.getWebGLErrorMessage());
@@ -46,25 +34,24 @@ var PointCloudViewer = function () {
     const pointSize = 0.00000005;
     const pointsName = "points";
 
-    function init(viewerDiv = null) {
+    function init(viewerDiv_in) {
 
-        if (viewerDiv === null) {
-            viewerDiv = window;
-        }
-
+        viewerDiv = viewerDiv_in;
+        
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(75, viewerDiv.innerWidth / viewerDiv.innerHeight, 0.0000000001, 10); //Real view, scaled with distance
+        camera = new THREE.PerspectiveCamera(75, viewerDiv.offsetWidth / viewerDiv.offsetHeight, 0.0000000001, 10); //Real view, scaled with distance
         camera.position.set(0, 0, 0.00005);
         camera.lookAt(scene.position);
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(viewerDiv.innerWidth, viewerDiv.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        renderer.setSize(viewerDiv.offsetWidth, viewerDiv.offsetHeight);
+        viewerDiv.appendChild(renderer.domElement);
+        //document.body.appendChild(renderer.domElement);
 
         //Resize
         window.addEventListener("resize", function () {
-            var width = viewerDiv.innerWidth;
-            var height = viewerDiv.innerHeight;
+            var width = viewerDiv.offsetWidth;
+            var height = viewerDiv.offsetHeight;
             renderer.setSize(width, height);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
@@ -81,6 +68,27 @@ var PointCloudViewer = function () {
         controls.dynamicDampingFactor = 0.3;
         controls.keys = [65, 83, 68];
         controls.addEventListener('change', renderScene);
+
+        //Adding control buttons
+        var buttons = [{style:"top:0px; right:0; width:75px;", id:"start", text:"Start", method:startPointCapture},
+            {style:"top:25px; right:0; width:75px;", id:"stop", text:"Stop", method:stopPointCapture},
+            {style:"top:50px; right:0; width:75px;", id:"save", text:"Save", method:null},
+            {style:"top:0px; left:0;", id:"x_pos", text:"x+", method:function () {pointCamera([1, 0, 0])}},
+            {style:"top:0px; left:25px;", id:"x_neg", text:"x-", method:function () {pointCamera([-1, 0, 0])}},
+            {style:"top:25px; left:0;", id:"y_pos", text:"y+", method:function () {pointCamera([0, 1, 0])}},
+            {style:"top:25px; left:25px;", id:"y_neg", text:"y-", method:function () {pointCamera([0, -1, 0])}},
+            {style:"top:50px; left:0;", id:"z_pos", text:"z+", method:function () {pointCamera([0, 0, 1])}},
+            {style:"top:50px; left:25px", id:"z_neg", text:"z-", method:function () {pointCamera([0, 0, -1])}}];
+        
+        for (var i = 0; i < buttons.length; i++) {
+            var button = document.createElement("button");
+            button.style.cssText = buttons[i].style;
+            button.id = buttons[i].id;
+            button.innerHTML = buttons[i].text;
+            button.className = "viewer_class";
+            button.addEventListener("click", buttons[i].method, false);
+            viewerDiv.appendChild(button);
+        }
 
         scene.background = new THREE.Color().setHSL(0.6, 0, 1);
         scene.fog = new THREE.Fog(scene.background, 1, 5000);
@@ -102,6 +110,19 @@ var PointCloudViewer = function () {
 
         addPoints([{"x":0, "y":0, "z":0, "i":0}]);
         renderScene();
+    };
+
+    /**
+     * Point the camera at a origin along a certain direction.
+     * @param directionVector direction camera will face
+     */
+    var pointCamera = function (directionVector) {
+        let currentPosition = camera.position;
+        let radius = Math.sqrt ( Object.values(currentPosition).reduce( (prev, current)=> prev + current*current, 0 ));
+        let new_cam_position = directionVector.map( x => radius*x );
+        camera.position.set (...new_cam_position);
+        camera.up = new THREE.Vector3(0.0, 1.0, 0.0);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
     };
 
     var updateScene = function () {
@@ -258,8 +279,9 @@ var PointCloudViewer = function () {
 };
 
 var viewer = PointCloudViewer();
-//viewer.init("split-content");
-viewer.init();
+var viewer_div = document.getElementById("viewer_container");
+viewer.init(viewer_div);
+//viewer.init();
 //viewer.startPointCapture();
 //start the drawing loop
 viewer.animate();

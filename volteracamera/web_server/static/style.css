@@ -6,9 +6,13 @@ html {
 
 body {
   /* max-width: 960px; */
-  max-width: 85%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  max-width: 95%;
   margin: 0 auto;
   background: white;
+  height: 100vh;
+  
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -167,12 +171,29 @@ input[type=submit] {
 }
 
 #image-sidebar {
-  height: 100%
-  position: fixed;
+  /* height: 100%;
+  position: fixed; */
   z-index: 1;
   top: 0;
   left: 0;
   border: 1px solid black;
   background: lightgrey;
   margin: 0.5em 0.5em;
+}
+
+#viewer_container {
+  width: auto;
+  position: relative;
+  height: 85vh;
+  border: 1px solid black;
+  margin-bottom: 0px;
+}
+.viewer_class {
+  position: absolute;
+  z-index: 99;
+}
+
+button.viewer_class {
+  width: 25px;
+  height: 25px;
 }
