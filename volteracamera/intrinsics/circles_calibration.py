@@ -8,7 +8,11 @@ from ..analysis.undistort import Undistort
 CAMERA_MATRIX_GUESS = np.array([[5357, 0, 640], [0, 5357, 360], [0, 0, 1]], dtype=float)
 DISTORTION_GUESS = np.array([0, 0, 0, 0, 0], dtype=float)
 
-def generate_asymmetric_circle_grid(size_x: int, size_y: int, circle_spacing: int)->tuple:
+DEFAULT_X = 4
+DEFAULT_Y = 5
+DEFAULT_SPACING = 150
+
+def generate_asymmetric_circle_grid(size_x = DEFAULT_X, size_y = DEFAULT_Y, circle_spacing = DEFAULT_SPACING)->tuple:
     """
     Generate an asymmetric circle pattern.
     size x and y are the number of circles, and the circle spacing is the spacing in pixels.
@@ -32,7 +36,7 @@ def generate_asymmetric_circle_grid(size_x: int, size_y: int, circle_spacing: in
     return (image, points, pattern)
 
 
-def generate_symmetric_circle_grid(size_x: int, size_y: int, circle_spacing: int)->tuple:
+def generate_symmetric_circle_grid(size_x = DEFAULT_X, size_y = DEFAULT_Y, circle_spacing = DEFAULT_SPACING)->tuple:
     """
     Generate an asymmetric circle pattern.
     size x and y are the number of circles, and the circle spacing is the spacing in pixels.

@@ -20,8 +20,9 @@ def get_cal_images():
     """
     global cal_images
     if not cal_images:
-        from ..intrinsics.circles_calibration import IMG
-        input_cal_image = IMG
+        from ..intrinsics.circles_calibration import generate_symmetric_circle_grid
+        img, _, _ = generate_symmetric_circle_grid()
+        input_cal_image = img
         cal_images = generate_random_cal_images (input_cal_image, 25)
     return cal_images
 

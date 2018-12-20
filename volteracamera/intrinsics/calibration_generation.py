@@ -1,6 +1,7 @@
 """
 Tools for projecting images into different orientations.
 """
+from .screen_based_calibration import create_projected_image
 
 import random
 import transforms3d as tfd
@@ -26,46 +27,11 @@ def save_scaled_images(images: list, max_image_size: int):
             image = cv2.resize(image, (image_size[1], image_size[0]))
         cv2.imwrite(str(num) + ".png", image)
 
-def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray)->np.ndarray:
-    """
-    Create a new image from a given input image that shows the input projected in space by the 
-    homography given by rvec and tvec. rvec is in angle axis form.
-    """
-    norm = np.sqrt(np.dot (rvec, rvec))
-    if np.abs(norm) > 0.0000001:
-        axis = rvec/norm
-    else:
-        axis = [1, 0, 0]
-    rot_matrix = tfd.axangles.axangle2mat(axis, norm)
-    if len(image.shape) == 3:    
-        height, width, _ = image.shape #python matrix shape is height, width order.
-    else:
-        height, width = image.shape 
-    center = np.array([width/2, height/2, 0])
-    f = 250
-    cam_matrix = np.array([[f, 0, center[0]],
-                           [0, f, center[1]],
-                           [0, 0, 1]])
-    points = np.array([[0, 0, f],
-              [width, height, f],
-              [0, height, f],
-              [width, 0, f]]) - center
-    offset = np.array([0, 0, f])
-    transformed_points = [np.dot(rot_matrix, point-offset)+offset + tvec  for point in points]
-    projected_points = np.array([np.dot(cam_matrix, point) for point in transformed_points], dtype="float32")
-    projected_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in projected_points], dtype="float32")
-    object_points = np.array([np.dot(cam_matrix, point) for point in points], dtype="float32")
-    object_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in object_points], dtype="float32")
-    
-    H = cv2.getPerspectiveTransform(object_points, projected_points)
-    warped_image = cv2.warpPerspective(image, H, (width, height), borderValue=(255, 255, 255))
-    return warped_image
-
 def generate_random_cal_images(input_image: np.ndarray, number_of_images: int)->list: 
     """
     Generate a set of random calibration images
     """
-    images = []
+    images = [input_image]
     random.seed(1)
     for _ in range(number_of_images):
         roll = random.uniform(-MAX_ANGLE, MAX_ANGLE)

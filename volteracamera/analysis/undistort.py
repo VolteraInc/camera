@@ -37,7 +37,7 @@ class Undistort (object):
     def __repr__(self):
         return str(self.__dict__)
 
-    def _undistort_points (self, points ):
+    def undistort_points (self, points ):
         """
         Undistort a single point.
         """
@@ -64,7 +64,7 @@ class Undistort (object):
         """
         Given an image point, undistort and project it.
         """
-        points_undistorted = self._undistort_points(points_2d)
+        points_undistorted = self.undistort_points(points_2d)
         return self._project_points(points_undistorted)
 
     def write_file(self, filename):
