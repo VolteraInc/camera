@@ -97,7 +97,7 @@ def _display_analyzed(image: np.ndarray, pattern_size: tuple, markers: np.ndarra
 
 def run_calibration(image_list: list, object_points_in: list, pattern_size: tuple, display: bool = False) -> tuple:
     """
-    Run the ChArUco calibration given a set of images (loaded into numpy arrays) 
+    Run the circles calibration given a set of images (loaded into numpy arrays) 
     and return a tuple of the camera matrix, distortion parameters, rvecs and tvecs.
 
     Raises a runtime error if there are no images.

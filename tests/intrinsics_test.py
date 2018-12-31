@@ -18,6 +18,14 @@ def test_null_image_transform():
     Test the image rotation when there is no change (should be equal)
     """
     image, _, _ = generate_symmetric_circle_grid(5, 4, 150)
+    with pytest.raises (ZeroDivisionError):
+        _ = create_projected_image(image, [0, 0, 0], [0, 0, -1.0])
+
+def test_simple_image_transform():
+    """
+    Test the image rotation when there is no change (should be equal)
+    """
+    image, _, _ = generate_symmetric_circle_grid(5, 4, 150)
     new_image = create_projected_image(image, [0, 0, 0], [0, 0, 0])
     diff = image - new_image
     assert (diff.flatten() > 1).sum() == 0
@@ -28,10 +36,8 @@ def test_intrinsics_calibration():
     Meta test of the entire process
     """
     image, points, pattern_size = generate_symmetric_circle_grid(5, 4, 150)
-    images = generate_random_cal_images(image, 30)
+    images = generate_random_cal_images(image, 25)
     assert images[0].shape == image.shape
-    
-    images[0] = image
 
     undistort = run_calibration(images, points, pattern_size, display=False)
 
