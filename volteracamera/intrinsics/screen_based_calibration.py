@@ -95,7 +95,7 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     points = np.array([[0, 0, 1],
               [width, height, 1],
               [0, height, 1],
-              [width, 0, 1]]) - center
+              [width, 0, 1]]) - center # the 1 in the z parameter is needed for the getPerspectiveTransform function.
     
     transformed_points = [np.dot(rot_matrix, point) + tvec  for point in points]
     

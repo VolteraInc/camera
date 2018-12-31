@@ -10,8 +10,8 @@ import cv2
 
 MAX_ANGLE=12*np.pi/180
 LATERAL=0
-Z_MIN = 1
-Z_RANGE=1.5
+Z_MIN = 0.25
+Z_RANGE=0.5
 
 def save_scaled_images(images: list, max_image_size: int):
     """
