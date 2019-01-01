@@ -39,32 +39,45 @@ def resize_image_without_scaling (image: np.ndarray, width: int = 1280, height: 
     resize an np.array into a new np.array.
     """
     input_image = Image.fromarray(image)
-    original_width, original_height = input_image.size #width, height order for PIL image.
-    ratio = width/height
-    original_ratio = original_width/original_height
-    if original_ratio >= ratio:
-        new_width = width
-        new_height = int(new_width * ratio)
-    else:
-        new_height = height
-        new_width = int(new_height / ratio)
-    resized_image = np.array(input_image.resize((new_width, new_height), Image.BICUBIC))
-    final_image = np.zeros((height, width))
-    top_corner = (int((final_image.shape[0] - resized_image.shape[0])/2), 
-                  int(final_image.shape[1] - resized_image.shape[1])/2)
-    final_image[top_corner[0]:(top_corner[0]+new_height), top_corner[1]:(top_corner[1]+new_width)] = resized_image
+    original_height, original_width = input_image.size # height, width order for PIL image.
+    width_scaling = width/original_width
+    height_scaling = height/original_height
+
+    scaling = height_scaling if height_scaling < width_scaling else width_scaling
+    new_width = int(scaling*original_width)
+    new_height = int(scaling*original_height)
+
+    input_image = input_image.resize((new_height, new_width), Image.BICUBIC)
+    resized_image = np.array(input_image)
+
+    final_image = np.zeros((width, height)) + 255
+    top_width, top_height = (int((width - new_width)/2), 
+                  int((height - new_height)/2))
+
+    final_image[top_width:(top_width+new_width), top_height:(top_height+new_height)] = resized_image
     return final_image
 
 def test_resize_image():
     """
     test the above method
     """
-    original_image = np.ones((640, 480))
-    final_image = np.zeros((1280, 640))
-    new_width, new_height = (int(640*640/480), 640)
-    final_image[int((1280-new_width)/2):(int((1280-new_width)/2)+new_width),:] = np.ones((int(640*(640/480)), 640))
-    resize_image_without_scaling(original_image)
+    original_image = np.zeros((640, 480))
+    final_image = np.zeros((1280, 720)) + 255
+    new_width, new_height = (int(640*720/480), int(480 * 720/480))
+    final_image[int((1280-new_width)/2):(int((1280-new_width)/2)+new_width),:] = np.zeros((new_width, new_height))
 
+    np.testing.assert_array_equal (resize_image_without_scaling(original_image), final_image)
+    
+import cv2
+def _display_analyzed(image: np.ndarray)->None:
+    """
+    Display an analyzed checkerboard image. Do not use directly, use through analyze_calibration_image
+    """
+    #a_copy = cv2.resize(image,  (500, 500))
+
+    cv2.imshow('frame', image)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
 def test_calibration_through_screen():
     """
@@ -76,16 +89,20 @@ def test_calibration_through_screen():
     screen_projection_matrix = sc.get_camera_matrix(width, height)
     #Generate the rvecs and tvecs.
     random.seed(1)
-    transforms = [cg.generate_random_rvec_tvec() for _ in range(30)]
+    transforms = [cg.generate_random_rvec_tvec() for _ in range(5)]
     #generate the images on the screen.
     images_on_screen = [sc.create_projected_image(image, rvec, tvec) for rvec, tvec in transforms]
     #generate the images on the sensor using a fake camera matrix.
     rvec = [0, 0, 0]
     tvec = [0, 0, 0.015]
     images_on_sensor = [sc.create_projected_image(resize_image_without_scaling(an_image), rvec, tvec, 5357) for an_image in images_on_screen]
+
+    for image in images_on_sensor:
+        _display_analyzed(image)
+
     #Minimize the combined system.
     result = sc.calibrate_through_screen(images_on_sensor, transforms, points, pattern, screen_projection_matrix)
 
-    np.assert_array_almost_equal (result.camera_matrix, sc.get_camera_matrix())
-    np.assert_array_almost_equal (result.distortion, np.array([0, 0, 0, 0, 0]))
+    np.testing.assert_array_almost_equal (result.camera_matrix, sc.get_camera_matrix())
+    np.testing.assert_array_almost_equal (result.distortion, np.array([0, 0, 0, 0, 0]))
     assert (False)
