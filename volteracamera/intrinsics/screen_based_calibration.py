@@ -1,7 +1,7 @@
 """
 This is a set of tools and routines for running calibrations based on a capture on a screen (images of a checkerboard)
 """
-from .circles_calibration import generate_symmetric_circle_grid
+from .circles_calibration import generate_symmetric_circle_grid, analyze_calibration_image
 from ..analysis.transform import Transform
 from ..analysis.undistort import Undistort
 import numpy as np
@@ -118,6 +118,28 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     warped_image = cv2.warpPerspective(image, H, (width, height), borderValue=(255, 255, 255))
     return warped_image
 
+def unpack_params (params: list):
+    """
+    Function to unpack and return the required parameters from the minimization parameter list.
+    params:
+    fx, fy, cx, cy, d1, d2, d3, d4, d5, rvec1, rvec2, rvec3, tvec1, tvec2, tvec3
+
+    return cam_matrix, distortion_matrix, rvec, tvec
+    """
+    fx = params[0]
+    fy = params[1]
+    cx = params[2]
+    cy = params[3]
+    distortion = np.asarray(params[4:9])
+    rvec = np.asarray (params[9:12])
+    tvec = np.asarray (params[12:])
+    cam_matrix = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
+    return (cam_matrix, distortion, rvec, tvec)
+
+def full_screen_residual (params, image_points, transforms, object_points, screen_projection_matrix):
+    pass
+
+
 def calibrate_through_screen(image_list: list, transforms: list, 
         object_points_in: list, pattern_size: tuple, 
         screen_projection_matrix: np.ndarray, display: bool = False) -> tuple:
@@ -132,3 +154,48 @@ def calibrate_through_screen(image_list: list, transforms: list,
     Then we iteratively determine the difference between the image points 
     and the true points projected on the sensor through the screen.
     """
+    if not image_list:
+        raise RuntimeError("No images passed to calibration routine.")
+    if len(image_list) != len(transforms):
+        raise RuntimeError("There must be a transform provided for each image.")
+
+    image_size = (image_list[0].shape[1], image_list[0].shape[0])
+    all_corners = []
+    used_transforms = []
+    for image in image_list:
+        try:
+            current_corners = np.asarray(analyze_calibration_image(image, pattern_size, display)).astype('float32')
+            all_corners.append (current_corners)
+            used_transforms.append(transforms)
+        except RuntimeError:
+            print("Missed Image")
+            pass
+    object_points = np.asarray(object_points_in).astype('float32')
+    
+    parameters = [5000, 5000, image_size[0]/2, image_size[1]/2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.15]
+    bounds = ((0,None), (0,None), (image_size[0]-image_size[0]*0.2),(image_size[0]+image_size[0]*0.2), \
+              ((image_size[0]-image_size[0]*0.2),(image_size[0]+image_size[0]*0.2)), \
+              (None, None), (None, None), (None, None), (None, None), (None, None), \
+              (-np.pi,np.pi),(-np.pi,np.pi),(-np.pi,np.pi), (None, None), (None, None),(None, None))
+
+    
+    #res = scipy.optimize.minimize(full_screen_residual, params, args=(all_corners, used_transforms, object_points, screen_projection_matrix), bounds = bounds)
+
+    #camera_matrix, distortion, rvec, tvec = res.x
+
+    # if res.success:
+    #     print ("Fit Successful.")
+    # else:
+    #     print ("Fit Unsuccessful.")
+
+    # print ("Camera Matrix:")
+    # print (camera_matrix)
+    # print ("Distortion Matrix")
+    # print (distortion)
+    # print ("rvec")
+    # print (rvec)
+    # print ("tvec")
+    # print (tvec)
+
+    
+    # return Undistort(camera_matrix, distortion)

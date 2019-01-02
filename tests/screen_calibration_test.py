@@ -79,6 +79,17 @@ def _display_analyzed(image: np.ndarray)->None:
     cv2.waitKey()
     cv2.destroyAllWindows()
 
+def test_unpack_parameters():
+    """
+    Test the function that unpacks the residuals
+    """
+    res = [100, 200, 300, 400, 1, 2, 3, 4, 5, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    cam_matrix, distortion, rvec, tvec = sc.unpack_params(res)
+    np.testing.assert_array_equal(cam_matrix, np.array([[100, 0, 300], [0, 200, 400], [0, 0, 1]]))
+    np.testing.assert_array_equal(distortion, np.array([1, 2, 3, 4, 5]))
+    np.testing.assert_array_equal(rvec, np.array([0.1, 0.2, 0.3]))
+    np.testing.assert_array_equal(tvec, np.array([0.4, 0.5, 0.6]))
+
 def test_calibration_through_screen():
     """
     Test the calibration process through a screen.
@@ -95,13 +106,10 @@ def test_calibration_through_screen():
     #generate the images on the sensor using a fake camera matrix.
     rvec = [0, 0, 0]
     tvec = [0, 0, 0.015]
-    images_on_sensor = [sc.create_projected_image(resize_image_without_scaling(an_image), rvec, tvec, 5357) for an_image in images_on_screen]
-
-    for image in images_on_sensor:
-        _display_analyzed(image)
+    images_on_sensor = [sc.create_projected_image(resize_image_without_scaling(an_image), rvec, tvec, 5357).astype("uint8") for an_image in images_on_screen]
 
     #Minimize the combined system.
-    result = sc.calibrate_through_screen(images_on_sensor, transforms, points, pattern, screen_projection_matrix)
+    result = sc.calibrate_through_screen(images_on_sensor, transforms, points, pattern, screen_projection_matrix, display=False)
 
     np.testing.assert_array_almost_equal (result.camera_matrix, sc.get_camera_matrix())
     np.testing.assert_array_almost_equal (result.distortion, np.array([0, 0, 0, 0, 0]))
