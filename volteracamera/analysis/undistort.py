@@ -28,8 +28,8 @@ class Undistort (object):
         if len(distortion) != 5:
             raise RuntimeError("Distortion parameters are the wrong size.")
 
-        self.camera_matrix = camera_matrix
-        self.distortion = np.asarray(distortion)
+        self.camera_matrix = np.asarray(camera_matrix, dtype=np.float32)
+        self.distortion = np.asarray(distortion, dtype=np.float32)
 
     def __str__(self):
         return self.__repr__()
@@ -42,6 +42,27 @@ class Undistort (object):
         Undistort a single point.
         """
         return cv2.undistortPoints(np.asarray(points, dtype=np.float32), self.camera_matrix, self.distortion)
+
+    def project_point_with_distortion (self, points):
+        """
+        project points with distortion
+        taken from https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html
+        """
+        k1, k2, p1, p2, k3 = self.distortion
+        point = points / points[2]
+
+        r2 = point[0]*point[0] + point[1]*point[1]
+
+        radial_coeff = 1.0 + k1*r2 + k2*r2*r2 + k3*r2*r2*r2 
+        xpp = point[0]*radial_coeff + 2.0*p1*point[0]*point[1] + p2*(r2 + 2.0*point[0]*point[0])  
+        ypp = point[1]*radial_coeff + p1*(r2 + 2.0*point[1]*point[1]) + 2.0*p2*point[0]*point[1] 
+
+        point[0] = xpp
+        point[1] = ypp
+
+        out_point = np.dot(self.camera_matrix, point)
+
+        return np.asarray([out_point[0], out_point[1]])
 
     def undistort_image (self, image ):
         """
