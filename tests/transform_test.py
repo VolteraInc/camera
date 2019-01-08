@@ -13,8 +13,8 @@ def test_default_initialization():
     Test default initialization (Null transform) 
     """
     transform = Transform() 
-    assert [0, 0, 0] == transform._rotation
-    assert [0, 0, 0] == transform._translation
+    np.testing.assert_array_equal([0, 0, 0], transform._rotation)
+    np.testing.assert_array_equal([0, 0, 0], transform._translation)
     assert np.array_equal(np.identity(4), transform._matrix)
 
     assert np.array_equal([1, 2, 3], transform.transform_point([1, 2, 3]))
@@ -65,3 +65,21 @@ def test_transform_bad_input():
     with pytest.raises(TypeError):
         transform.transform_point(5) 
   
+def test_combine_transform():
+    """
+    Test combining transforms 
+    """
+    point = np.array([1, 2, 3])
+    rot_90_x = np.array([np.pi/2, 0, 0])
+    trans = np.array([1, 2, -1])
+    transform1 = Transform(translation = trans, rotation = rot_90_x)
+    transform2 = Transform(translation = trans+1, rotation = rot_90_x)
+    trans_combine = transform1.combine(transform2)
+
+    p1 = transform1.transform_point(transform2.transform_point(point))
+    p2 = trans_combine.transform_point(point)
+
+    np.testing.assert_array_almost_equal(p1, p2)
+    
+
+    

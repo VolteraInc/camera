@@ -12,6 +12,64 @@ from scipy.optimize import minimize, least_squares
 FOCAL_LENGTH=250
 SMALL_NUM = 0.0000001
 
+def reduce_4_to_3(input_matrix: np.ndarray)->np.ndarray:
+    """
+    Take a 4x4 matrix and turn it into 3x4.
+    """
+    reducing_matrix = np.array ([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
+    return np.dot(reducing_matrix, input_matrix)
+
+class Homography (object):
+    """
+    This class is used to represent an image homography. 
+    """
+
+    def __init__(self, object_points: list = None, image_points: list = None) -> None:
+        """
+        The homography matrix is generated from a set of object and image points. 
+        """
+
+        if object_points is None or image_points is None:
+            self.H = None
+            return
+
+        if len(object_points) != len(image_points):
+            raise RuntimeError ("Mismatch between object and image points.")
+        try:            
+            _object_points = np.array([[[point[0], point[1]]] for point in object_points])
+            _image_points = np.array([point for point in image_points])
+
+            self.H = cv2.findHomography(_object_points, _image_points)[0]
+        except:
+            self.H = None
+
+    def exists (self):
+        if not self.H:
+            return False
+
+    def column(self, idx):
+        """
+        return the column given by idx, 1 referenced
+        """
+        return self.H[:, idx-1]
+
+    @staticmethod
+    def calculate_H (camera_matrix: np.ndarray, transform: Transform):
+        """
+        Static method for generating a homography from the camera matrix and transform class
+        """
+        if not type(camera_matrix) is np.ndarray or camera_matrix.shape != (3,3):
+            raise RuntimeError("Invalid camera matrix.")
+        if not type(transform) is Transform:
+            raise RuntimeError("Invalid transform.")
+        H = Homography()
+        #Since the object points will be at z = 0, we'll follow the Tan 2017 definition
+        trans = reduce_4_to_3(transform.matrix())
+        trans = np.vstack([trans[:, 0], trans[:, 1], trans[:, 3]])
+        H.H = np.dot(camera_matrix, trans)
+        return H
+
+
 def get_image_dimensions(image: np.ndarray)->tuple:
     """
     Get the image width and height.
@@ -31,13 +89,6 @@ def get_camera_matrix(width: int, height:int, f = FOCAL_LENGTH)->np.ndarray:
                            [0, f, center[1]],
                            [0, 0, 1]])
     return cam_matrix
-
-def reduce_4_to_3(input_matrix: np.ndarray)->np.ndarray:
-    """
-    Take a 4x4 matrix and turn it into 3x4.
-    """
-    reducing_matrix = np.array ([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
-    return np.dot(reducing_matrix, input_matrix)
     
 def project_point (point: np.ndarray, rvec: np.ndarray, tvec: np.ndarray, projection_matrix: np.ndarray, distortion:np.ndarray)->np.ndarray:
     """
@@ -78,46 +129,56 @@ def project_point_to_screen_to_camera (point: np.ndarray, rvec_cam: np.ndarray, 
     sensor_point = project_point(screen_point, rvec_cam, tvec_cam, projection_matrix_cam, distortion_cam)
     return sensor_point
 
-def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray, focal_length: int = FOCAL_LENGTH)->np.ndarray:
+def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray, image_size: tuple, focal_length: int = FOCAL_LENGTH)->np.ndarray:
     """
     Create a new image from a given input image that shows the input projected in space by the 
-    homography given by rvec and tvec. rvec is in angle axis form. focal_lenght is used to generate 
-    the calibration matrix.
+    homography given by rvec and tvec. rvec is in angle axis form. focal_length is used to generate 
+    the calibration matrix. Image size is the desired end image size.
+    
+    The returned images vary in size based on how large the image needs to be to capture the points. 
+    The program fails if the required image is larger than 2000 pixels in any dimension. In addition to 
+    returning the image a tuple containing the (minx, maxx, miny, maxy) values is also returned. This is 
+    later used to select the most appropriate crop for the entire group.
     """
-    norm = np.sqrt(np.dot (rvec, rvec))
-    if np.abs(norm) > SMALL_NUM:
-        axis = rvec/norm
-    else:
-        axis = [1, 0, 0]
-    rot_matrix = tfd.axangles.axangle2mat(axis, norm)
+    transform = Transform(rotation=rvec, translation=tvec)
+
     width, height = get_image_dimensions(image)
-    center = np.array([width/2, height/2, 0])
-    cam_matrix = get_camera_matrix(width, height, focal_length)
+    cam_matrix = get_camera_matrix(image_size[0], image_size[1], focal_length)
     points = np.array([[0, 0, 1],
               [width, height, 1],
               [0, height, 1],
-              [width, 0, 1]]) - center # the 1 in the z parameter is needed for the getPerspectiveTransform function.
+              [width, 0, 1]])
     
-    transformed_points = [np.dot(rot_matrix, point) + tvec  for point in points]
+    transformed_points = [transform.transform_point(point) for point in points]
     
     projected_points = np.array([np.dot(cam_matrix, point) for point in transformed_points], dtype="float32")
     
     for point in projected_points:
         if np.abs(point[2]) < SMALL_NUM:
             raise ZeroDivisionError("Image points at origin, skipping image projection.")
-    projected_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in projected_points], dtype="float32")
-    object_points = np.array([np.dot(cam_matrix, point) for point in points], dtype="float32")    
+    projected_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in projected_points], dtype="float32") 
 
-    # for point in object_points:
-    #     if np.abs(point[2]) < SMALL_NUM:
-    #         raise ZeroDivisionError("Image points at origin, skipping image projection")    
-    # object_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in object_points ], dtype="float32")
-    object_points = np.array([[point[0], point[1]] for point in object_points ], dtype="float32")
+    # # for point in object_points:
+    # #     if np.abs(point[2]) < SMALL_NUM:
+    # #         raise ZeroDivisionError("Image points at origin, skipping image projection")    
+    # # object_points = np.array([[point[0]/point[2], point[1]/point[2]] for point in object_points ], dtype="float32")
+    object_points = np.array([[point[0], point[1]] for point in points ], dtype="float32")
 
     H = cv2.getPerspectiveTransform(object_points, projected_points)
     
-    warped_image = cv2.warpPerspective(image, H, (width, height), borderValue=(255, 255, 255))
-    return warped_image
+    x = np.array([ point[0] for point in projected_points ])
+    y = np.array([ point[1] for point in projected_points ])
+
+    new_width = np.max(x) - np.min(x)
+    new_height = np.max(y) - np.min(y)
+
+    if np.max(x) > 20000 or np.max(y) > 20000:
+        raise RuntimeError("Image sizes too big (> ({}, {}) pixels), adjust your parameters.".format(np.max(x), np.max(y)))
+
+    print ("Ranges: {}-{}, {}-{}, Projected dimensions: {}, {}".format(round(np.min(x)), round(np.max(x)), round (np.min(y)), round(np.max(y)), round(new_width), round(new_height)))
+
+    warped_image = cv2.warpPerspective(image, H, (int(round(np.max(y)+300)), int(round(np.max(x)+300))), borderValue=(255, 255, 255))
+    return warped_image, (round(np.min(x)), round(np.max(x)), round (np.min(y)), round(np.max(y)))
 
 def unpack_params (params: list):
     """

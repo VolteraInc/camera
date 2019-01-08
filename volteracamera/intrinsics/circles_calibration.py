@@ -88,7 +88,7 @@ def _display_analyzed(image: np.ndarray, pattern_size: tuple, markers: np.ndarra
     a_copy = np.copy(image)
     cv2.drawChessboardCorners(a_copy, pattern_size, markers, True)
 
-    a_copy = cv2.resize(a_copy,  (500, 500))
+    #a_copy = cv2.resize(a_copy,  (500, 500))
 
     cv2.imshow('frame', a_copy)
     cv2.waitKey()

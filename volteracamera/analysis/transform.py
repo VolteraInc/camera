@@ -16,9 +16,10 @@ class Transform (object):
 
         The default is the null transform.
         """
-        if not rotation:
+
+        if type(rotation) is type(None):
             rotation = [0.0, 0.0, 0.0]
-        if not translation:
+        if type(translation) is type(None):
             translation = [0.0, 0.0, 0.0]
 
         if len(rotation) != 3:
@@ -26,8 +27,8 @@ class Transform (object):
         if len(translation) != 3:
             raise TypeError("Translation must be in 3 vector form.")
 
-        self._rotation = rotation
-        self._translation = translation
+        self._rotation = np.array(rotation)
+        self._translation = np.array(translation)
         self._update_matrix()
 
     def _update_matrix (self):
@@ -40,7 +41,15 @@ class Transform (object):
            axis = self._rotation/angle
 
         self._rot_matrix = tfd.axangles.axangle2mat(axis, angle)
-        self._matrix = tfd.affines.compose(self._translation, self._rot_matrix, [1.0, 1.0, 1.0] )
+        self._matrix = np.identity(4)
+        self._matrix[0:3, 0:3] = self._rot_matrix
+        self._matrix[0:3, 3] = self._translation
+
+    def matrix(self):
+        """
+        Return the transformation matrix.
+        """
+        return self._matrix
 
     def transform_point(self, point):
         """
@@ -64,3 +73,14 @@ class Transform (object):
         new_point = self.transform_point(plane.point)
         new_normal = np.dot (self._rot_matrix, plane.normal)
         return Plane(point_on_plane = new_point, normal = new_normal) 
+
+    def combine(self, other):
+        """
+        Multiply two transforms together.
+        """
+        new_matrix = np.dot(self.matrix(), other.matrix())
+        tvec = new_matrix[0:3, 3].transpose()
+        R = new_matrix[0:3, 0:3]
+        axis, angle = tfd.axangles.mat2axangle(R)
+        rvec = axis*angle
+        return Transform (rotation=rvec, translation=tvec)
