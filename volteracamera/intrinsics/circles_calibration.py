@@ -35,7 +35,6 @@ def generate_asymmetric_circle_grid(size_x = DEFAULT_X, size_y = DEFAULT_Y, circ
 
     return (image, points, pattern)
 
-
 def generate_symmetric_circle_grid(size_x = DEFAULT_X, size_y = DEFAULT_Y, circle_spacing = DEFAULT_SPACING)->tuple:
     """
     Generate an asymmetric circle pattern.
