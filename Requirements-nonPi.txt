@@ -68,7 +68,6 @@ traitlets==4.3.2
 traittypes==0.2.1
 transforms3d==0.3.1
 typed-ast==1.1.0
--e git+git@github.com:VolteraInc/camera.git@8a432755d7414bf962508735287cee3de55bf7e1#egg=VolteraCamera
 wcwidth==0.1.7
 webencodings==0.5.1
 Werkzeug==0.14.1
