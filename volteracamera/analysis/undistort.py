@@ -43,6 +43,13 @@ class Undistort (object):
         """
         return cv2.undistortPoints(np.asarray(points, dtype=np.float32), self.camera_matrix, self.distortion)
 
+    def project_point_with_distortion_cv (self, points):
+        """
+        project points with distortion using opencv function.
+        """
+        out_point, _ = cv2.projectPoints(np.array([points]), rvec=np.array([0, 0, 0], dtype="float32"), tvec=np.array([0, 0, 0], dtype="float32"), cameraMatrix=self.camera_matrix, distCoeffs=self.distortion)
+        return out_point[0][0]
+
     def project_point_with_distortion (self, points):
         """
         project points with distortion

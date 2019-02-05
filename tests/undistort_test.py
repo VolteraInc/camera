@@ -46,9 +46,9 @@ def test_direct_projection_undistortion ():
     """
     point = np.array([0.5, 0.5, 1.0])
     undistort = Undistort (np.array([[300, 0, 640], [0, 300, 480], [0, 0, 1]]), np.array([0.1, 0.05, -0.002, 0.002, 0.001]))
-    point_cv = undistort.undistort_points([[[point[0]/point[2], point[1]/point[2]]]])
+    point_cv = undistort.project_point_with_distortion_cv(point)
     point_direct = undistort.project_point_with_distortion(point)
 
-    np.testing.assert_array_almost_equal(point_cv[0][0], point_direct)
+    np.testing.assert_array_almost_equal(point_cv, point_direct)
      
 

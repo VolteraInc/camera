@@ -8,7 +8,7 @@ from ..analysis.transform import Transform
 
 def get_projected(point, undistorter, transformer):
     """
-    given a point, an undistortion class and a transformation class, return the projected 2d point
+    given a 3d point (measured in stage co-ords), an undistortion class and a transformation class, return the projected 2d point
     """
     return undistorter.project_point_with_distortion(transformer.transform_point(point))
 
@@ -36,9 +36,9 @@ def point_residuals (params, points_3d, points_2d):
     """
     cam_matrix, distortion, rvec, tvec = unpack_params(params)
     undistort = Undistort(cam_matrix, distortion)
-    transform = Transform(rvec, tvec)
+    transform = Transform(rotation=rvec, translation=tvec)
     residuals = np.array([ get_projected(point_3d, undistort, transform) - point_2d for point_3d, point_2d in zip(points_3d, points_2d)])
-    return residuals.flatten()
+    return residuals.ravel()
 
 def single_residual (params, points_3d, points_2d):
     """
@@ -52,32 +52,32 @@ def calibrate_from_3d_points ( points_3d, observed_points_2d, camera_matrix = No
     Given a set of points in 3d, the observed points in 2d, solve for the camera parameters and inital R and t.
     """
     if not isinstance(camera_matrix, np.ndarray):
-        camera_matrix = np.array([[5000, 0, 640], [0, 5000, 360], [0, 0, 1]])
+        camera_matrix = np.array([[4000, 0, 650], [0, 4000, 350], [0, 0, 1]])
     if not isinstance(distortion, np.ndarray):
         distortion = np.array([0, 0, 0, 0, 0])
 
     parameters = [camera_matrix[0, 0], camera_matrix[1, 1], camera_matrix[0, 2], camera_matrix[1, 2], 
                   distortion[0], distortion[1], distortion[2], distortion[3], distortion[4],
-                  0, 0, 0, 0, 0, 0.015]
+                  0, 0, 0, 0, 0, 0.0001]
 
-    guess = so.basinhopping(single_residual, parameters, minimizer_kwargs={"args":(points_3d, observed_points_2d)})
+    #guess = so.basinhopping(single_residual, parameters, minimizer_kwargs={"args":(points_3d, observed_points_2d)})
 
-    print("Initial annealing:")
-    if guess.success:
-        print ("Fit sucessful.")
-    else:
-        print ("Fit failed.")
-    camera_matrix, distortion, rvecs, tvecs = unpack_params(guess.x)
-    print ("Camera Matrix:")
-    print (camera_matrix)
-    print ("Distortion Matrix")
-    print (distortion)
-    print ("rvec")
-    print(rvecs)
-    print ("tvec")
-    print(tvecs)
+    #print("Initial annealing:")
+    #if guess.success:
+    #    print ("Fit sucessful.")
+    #else:
+    #    print ("Fit failed.")
+    #camera_matrix, distortion, rvecs, tvecs = unpack_params(guess.x)
+    #print ("Camera Matrix:")
+    #print (camera_matrix)
+    #print ("Distortion Matrix")
+    #print (distortion)
+    #print ("rvec")
+    #print(rvecs)
+    #print ("tvec")
+    #print(tvecs)
 
-    res = so.least_squares(point_residuals, guess.x, method='trf', verbose=2, args=(points_3d, observed_points_2d))
+    res = so.least_squares(point_residuals, parameters, jac="3-point", x_scale='jac', method='trf', verbose=2, args=(points_3d, observed_points_2d))
 
     print("Actual Fit:")
     if res.success:

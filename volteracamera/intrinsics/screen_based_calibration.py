@@ -142,7 +142,7 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     """
     transform = Transform(rotation=rvec, translation=tvec)
 
-    width, height = get_image_dimensions(image)
+    width, height = get_image_dimensions(image)https://www.google.ca/
     cam_matrix = get_camera_matrix(image_size[0], image_size[1], focal_length)
     points = np.array([[0, 0, 1],
               [width, height, 1],
@@ -165,7 +165,7 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     object_points = np.array([[point[0], point[1]] for point in points ], dtype="float32")
 
     H = cv2.getPerspectiveTransform(object_points, projected_points)
-
+    
     x = np.array([ point[0] for point in projected_points ])
     y = np.array([ point[1] for point in projected_points ])
 
