@@ -2,6 +2,7 @@
 This set of tests will be used to test the approach of using at translation stage to image single points to figure out camera intrinsics and disstrotion
 """
 import pytest
+import random
 import numpy as np
 import scipy.optimize as so
 from volteracamera.analysis.undistort import Undistort
@@ -10,6 +11,8 @@ import volteracamera.intrinsics.stage_calibration as sc
 
 initial_camera_matrix = np.array([[5257.0, 0.0, 640.0], [0.0, 5257.0, 360.0], [0.0, 0.0, 1.0]])
 initial_distortion = np.array([0.1, -0.05, 0.05, -0.05, 0.002])
+initial_R = np.array([0.01, -0.001, 0.05])
+initial_t = np.array([0.1, -0.1, 0.015])
 
 def generate_dataset():
     """
@@ -17,8 +20,6 @@ def generate_dataset():
     """
     initial_point = np.array([0, 0, 0])
     initial_U = Undistort(initial_camera_matrix, initial_distortion)
-    initial_R = np.array([0, 0, 0])
-    initial_t = np.array([0, 0, 0.015])
     initial_T = Transform (rotation=initial_R, translation=initial_t)
 
     #distance: 1.5 cm, FOV Width: (0.17920477879410118, 0.10080268807168191) cm
@@ -66,15 +67,15 @@ def test_get_projected():
     """
     Test the projection function again opencv
     """
-    rvec=np.array([0, 0, 0], dtype="float32")
-    tvec=np.array([0, 0, 0.015], dtype="float32")
+    rvec=np.array(initial_R, dtype="float32")
+    tvec=np.array(initial_t, dtype="float32")
     undistorter=Undistort(initial_camera_matrix, initial_distortion)
     transformer=Transform(rvec, tvec)
     _, translations, points_2d = generate_dataset()
 
     for point_2d, point_3d in zip (points_2d, translations):
         point = sc.get_projected(point_3d, undistorter, transformer)
-        np.testing.assert_array_almost_equal( point_2d, point )
+        np.testing.assert_array_almost_equal( point_2d, point, decimal=4 )
 
 def test_residuals():
     """
@@ -84,7 +85,7 @@ def test_residuals():
 
     parameters = [initial_camera_matrix[0, 0], initial_camera_matrix[1, 1], initial_camera_matrix[0, 2], initial_camera_matrix[1, 2], 
                   initial_distortion[0], initial_distortion[1], initial_distortion[2], initial_distortion[3], initial_distortion[4],
-                  0, 0, 0, 0, 0, 0.015]
+                  *initial_R, *initial_t]
 
     np.testing.assert_almost_equal (sc.single_residual(parameters, translations, points_2d_actual), 0.0)
 
@@ -95,6 +96,8 @@ def test_xyz_intrinsics():
     """
     _, translations, points_2d_actual = generate_dataset()
 
+    spread = 0.5
+    points_2d_actual = [ [point[0] + random.uniform(-spread, spread), point[1] + random.uniform(-spread, spread)] for point in points_2d_actual ]
     undistortion = sc.calibrate_from_3d_points(translations, points_2d_actual)
 
     np.testing.assert_array_almost_equal(undistortion.camera_matrix, initial_camera_matrix )
