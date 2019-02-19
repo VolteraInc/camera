@@ -43,9 +43,11 @@ if __name__=="__main__":
 
     #filepath = "/home/rwicks/Voltera/GridImages/vacuumbed/*.jpg"
     filepath = "/home/rwicks/Voltera/GridImages/paper/*.jpg"
+    #filepath = "/home/rwicks/Voltera/GridImages/phone/*.jpg"
 
     files = glob.glob(filepath)
     files.sort()
+
     for file in files:
         file_path = Path(file)
         if not file_path.exists():
@@ -54,11 +56,11 @@ if __name__=="__main__":
         image = cv2.imread(file)
 
         mean_value = extract_feature_position (image)
-        preview_image(image, mean_value, 100)
+        preview_image(image, mean_value, 500)
 
         file_stem = file_path.stem
 
-        pos = re.findall(r'\d+', file_stem)
+        pos = re.findall(r'(\d+(?:\.\d+)?)', file_stem)
         print ("{}, {}, {}, {}, {}".format(pos[1], pos[2], pos[3], mean_value[0], mean_value[1]))
 
 
