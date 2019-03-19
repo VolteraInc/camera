@@ -142,7 +142,7 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     """
     transform = Transform(rotation=rvec, translation=tvec)
 
-    width, height = get_image_dimensions(image)https://www.google.ca/
+    width, height = get_image_dimensions(image)
     cam_matrix = get_camera_matrix(image_size[0], image_size[1], focal_length)
     points = np.array([[0, 0, 1],
               [width, height, 1],

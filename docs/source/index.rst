@@ -1,23 +1,25 @@
-.. Calibration Tools documentation master file, created by
-   sphinx-quickstart on Thu Jun 14 11:46:08 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to Calibration Tools's documentation!
-=============================================
+Welcome to Voltera Laser Camera Documentation documentation!
+============================================================
+
+This document covers the details of how to use the Voltera Laser Camera python tools and libraries. There
+are a variety of different components to this software package, including:
+
+* A device server that runs on a Raspberry Pi compute module and provides both a system level SPI based communication
+  channel for accessing xyz data from the server during normal use and a REST API for accessing full images and XYZ data from the 
+  system during calibration.
+* A set of classes and tools for accessing the server from a remote computer through the SPI (Serial Peripheral Interface) bus.
+* A suite of browser based tools for calibrating the camera laser system.
 
 .. toctree::
    :maxdepth: 2
 
    install
-   command_line_tools_description
-   calibration_instructions
-   intrinsics
-   convert_existing
-   set_up_arm_files
-   sensor_origin_determination_procedure
-   verification_and_optimization
-   modules
+   rest_api
+   spi
+   modules 
+
+   
 ..   :caption: Contents: 
 
 Indices and tables
