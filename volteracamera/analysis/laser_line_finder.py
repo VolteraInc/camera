@@ -165,10 +165,11 @@ def preview_image():
     diff = timeit.default_timer() - start
     print ("Analyzed " + str(num_analysis) + " in "+ str(diff) + "s." )
     image = point_overlay (image, points)
+    image = cv2.resize(image, (1000, 1000))
     cv2.imshow('image',image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.imwrite("out.jpg", image)
+    #cv2.imwrite("out.jpg", image)
 
 class LaserProcessingServer (threading.Thread):
     """

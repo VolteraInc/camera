@@ -93,6 +93,7 @@ def main():
     parser = argparse.ArgumentParser(description="Tool for loading and running a calibration")
 
     parser.add_argument("input_file", help="File containing the x, y, z and u, v position of the holes/dots.")
+    parser.add_argument("output_file", type=str)
 
     args = parser.parse_args()
 
@@ -112,6 +113,10 @@ def main():
     undistort = calibrate_from_3d_points (position, points_2d, camera_matrix, distortion, rvec, tvec)
 
     print (undistort)
+
+    print ("Saving Calibration to " + args.output_file)
+
+    out_cal.write_file(args.output_file)
 
 
 if __name__ == "__main__":

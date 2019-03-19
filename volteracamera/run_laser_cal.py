@@ -5,6 +5,7 @@ import argparse
 import glob
 import cv2
 import sys
+import re
 import numpy as np
 from pathlib import Path
 from volteracamera.analysis.undistort import Undistort
@@ -15,7 +16,7 @@ from volteracamera.analysis.laser_fitter import LaserFitter
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", type=str, help="Input camera calibration file.")
-    parser.add_argument("image_directory", type=str, help="director of images, sorted by name from closest to furthest.")
+    parser.add_argument("image_directory", type=str, help="director of images")
     parser.add_argument("output_file", type=str, help="output laser plane filename.")
 
     args = parser.parse_args()
@@ -29,11 +30,13 @@ if __name__=="__main__":
     distance_list = []
     with LaserLineFinder() as finder:
         for count, an_image in enumerate(image_files):
+            file_stem = Path(an_image).stem
+            pos = re.findall(r'(\d+(?:\.\d+)?)', file_stem)
             image = cv2.imread(an_image)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             print ("Loaded " + an_image)
             data_points_list.append(finder.process(image))
-            distance_list.append(count * LAYER_THICKNESS)
+            distance_list.append(float(pos[1]))
 
     undistort = Undistort.read_json_file(args.input_file)
     if not undistort:
