@@ -74,6 +74,9 @@ class Camera(threading.Thread):
 
     @property
     def exposure(self):
+        """
+        Return the exposure time in ms
+        """
         return self.camera.shutter_speed / 1E3
 
     @exposure.setter

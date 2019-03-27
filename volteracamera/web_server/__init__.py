@@ -114,10 +114,12 @@ def create_app(test_config=None):
     from . import controls
     from . import calibration
     from . import viewer
+    from . import api
     application.register_blueprint(app.bp) 
     application.register_blueprint(controls.bp)
     application.register_blueprint(calibration.bp)
     application.register_blueprint(viewer.bp)
+    application.register_blueprint(api.bp)
     
     application.before_first_request (partial (initialize, application.instance_path))
     application.after_request (add_header)
