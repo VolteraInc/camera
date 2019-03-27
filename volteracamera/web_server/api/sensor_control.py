@@ -1,4 +1,4 @@
-from flask import jsonify, url_for
+from flask import jsonify, url_for, send_file
 from collections import OrderedDict
 import random 
 import string 
@@ -6,6 +6,8 @@ import datetime
 from . import bp
 from .errors import bad_request
 from .. import get_cam
+from volteracamera.control.camera import CameraReader
+from io import BytesIO
 
 @bp.route('/sensor/exposure')
 def get_sensor_exposure():
@@ -46,13 +48,12 @@ def start_capture():
     """
     Capture an image and return a json message with the url pointing to the address to download it.
     """
-    global image_list
-    cam = get_cam()
+    cam = CameraReader()
     key = ran_gen(12)
     success = True
     message = ""
     try:
-        image_list[key] = cam.capture_single()
+        image_list[key] = cam.capture()
         if len(image_list) > MAX_IMAGE_STORAGE_DEPTH:
             _ = image_list.popitem()
     except:
@@ -72,8 +73,12 @@ def get_image(id):
     """
     global image_list
     try:
-        image = image_list.pop(id)
+        image_array = image_list.pop(id)
     except:
         return bad_request("Image {} does not exist.".format(id))
-    
+    image = CameraReader.array_to_image(image_array)
+    image_stream = BytesIO()
+    image.save (image_stream, format="jpeg")
+    image_stream.seek(0)
+    return send_file(image_stream, mimetype='image/jpeg')
     
