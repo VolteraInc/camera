@@ -66,7 +66,7 @@ def start_capture():
                     "success": success,
                     "message": message})
 
-@bp.route('/sensor/capture/<str:id>')
+@bp.route('/sensor/capture/<id>')
 def get_image(id):
     """
     Return the image requested by id. The start_capture must be called first. After the file is retrieved, it is cleared immediately.
