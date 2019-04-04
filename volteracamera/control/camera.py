@@ -5,6 +5,7 @@ import time
 from io import BytesIO
 from PIL import Image
 import numpy as np
+import io
 import zmq
 import threading
 import logging
@@ -18,7 +19,7 @@ if picam_found:
     from picamera.array import PiRGBArray
 
 CAMERA_INTERFACE="ipc:///tmp/camera_thread"
-CAMERA_HIGH_WATER_MARK=10
+CAMERA_HIGH_WATER_MARK=5
 
 #RESOLUTION = (2592, 1944)
 RESOLUTION = (3280, 2464)
@@ -45,12 +46,13 @@ class Camera(threading.Thread):
             self.camera = PiCamera()
             self.camera.resolution = RESOLUTION
             #self.camera.zoom = ZOOM
-            self.camera.awb_mode = AWB_MODE
             self.camera.awb_gains = AWB_GAINS
             self.camera.framerate = FRAMERATE
-            #time.sleep(3)
             #self.camera.shutter_speed = SHUTTER_SPEED
             #self.camera.exposure_mode = EXPOSURE_MODE
+            time.sleep(1)
+            
+            #self.camera.awb_mode = AWB_MODE
             self.raw_capture = PiRGBArray(self.camera, size=(RESOLUTION[0], RESOLUTION[1])) 
             self.frame = None
             self.frame_mutex = threading.Lock()
@@ -130,15 +132,19 @@ class Camera(threading.Thread):
         while (True):
             if not self.stop_capture:
                 if picam_found:
-                    for frame in self.camera.capture_continuous(self.raw_capture, format="rgb", use_video_port=True):
-                        Camera._send_array (self.socket, frame.array)
+                    stream = io.BytesIO()
+                    for frame in self.camera.capture_continuous(stream, format="jpeg", use_video_port=True):
+                        frame.seek(0)
+                        img = np.asarray(Image.open(frame))
+                        Camera._send_array (self.socket, img)
                         logging.debug("Sent real image.")
                         self.raw_capture.truncate(0)
                         with self.frame_mutex:
-                            self.frame = frame.array.copy()
+                            self.frame = img.copy()
                         if self.stop_capture: 
                             logging.debug("Capture stopped.")
                             break
+                        stream.seek(0)
                 else:
                     while (True):
                         frame = Image.new(mode="RGB", size=RESOLUTION)
