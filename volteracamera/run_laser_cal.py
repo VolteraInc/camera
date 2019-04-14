@@ -9,7 +9,7 @@ import re
 import numpy as np
 from pathlib import Path
 from volteracamera.analysis.undistort import Undistort
-from volteracamera.analysis.laser_fitter import LaserFitter, LAYER_THICKNESS
+from volteracamera.analysis.laser_fitter import LaserFitter
 from volteracamera.analysis.laser_line_finder import LaserLineFinder, point_overlay
 from volteracamera.analysis.laser_fitter import LaserFitter
 
