@@ -70,10 +70,13 @@ def initialize( file_path ):
     #Intantiate and start the laser
     _ = get_laser()
     #load in the calibration files
+    print ("Loading Cals from {}".format(file_path))
     logging.debug("Loading {}".format(os.path.join( file_path, DEFAULT_CAMERA_FILE)))
     cam_params = Undistort.read_json_file(os.path.join( file_path, DEFAULT_CAMERA_FILE))
+    print (cam_params)
     logging.debug("Loading {}".format(os.path.join( file_path, DEFAULT_LASER_PLANE_FILE)))
     laser_plane = Plane.read_json_file(os.path.join(file_path, DEFAULT_LASER_PLANE_FILE))   
+    print (laser_plane)
     #initialize the laser processor
     processor = LaserProcessingServer (cam_params, laser_plane, cam)
 
@@ -114,10 +117,12 @@ def create_app(test_config=None):
     from . import controls
     from . import calibration
     from . import viewer
+    from . import api
     application.register_blueprint(app.bp) 
     application.register_blueprint(controls.bp)
     application.register_blueprint(calibration.bp)
     application.register_blueprint(viewer.bp)
+    application.register_blueprint(api.bp)
     
     application.before_first_request (partial (initialize, application.instance_path))
     application.after_request (add_header)

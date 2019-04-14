@@ -55,7 +55,7 @@ class LaserFitter(object):
         self.undistort = undistort
         self.rays = []
         for a_set in laser_intersections:
-            points = [[[i, j]] for i, j in enumerate (a_set)]
+            points = [[[i, j]] for i, j in enumerate (a_set) if j != 0]
             self.rays.append(undistort.get_rays_from_points(points))
 
         self.plane_distance = relative_distances

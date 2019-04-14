@@ -23,7 +23,7 @@ FILTER_SMOOTH = (np.zeros(KERNEL) + 1.0)/KERNEL
 FILTER_SHARPEN = (np.zeros(KERNEL) - 1.0)
 FILTER_SHARPEN[int(KERNEL/2)] = KERNEL 
 INTERVAL = 1
-PROFILE_OFFSET = 0.0000001 #move each profile over by one mm in the y direction.
+PROFILE_OFFSET = 0.0000001 #move each profile over by 0.1 um in the y direction.
 
 class LaserLineFinder (object):
     """
@@ -59,7 +59,7 @@ class LaserLineFinder (object):
             raise RuntimeError ("Use process inside with statement.")
         if (len(image.shape) != 2):
             raise RuntimeError ("Grayscale images only.")
-        height, width = image.shape
+        _, width = image.shape
 
         cols = np.arange(0,width)
     
@@ -165,10 +165,11 @@ def preview_image():
     diff = timeit.default_timer() - start
     print ("Analyzed " + str(num_analysis) + " in "+ str(diff) + "s." )
     image = point_overlay (image, points)
+    image = cv2.resize(image, (1000, 1000))
     cv2.imshow('image',image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.imwrite("out.jpg", image)
+    #cv2.imwrite("out.jpg", image)
 
 class LaserProcessingServer (threading.Thread):
     """

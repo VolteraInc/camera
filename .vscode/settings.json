@@ -7,5 +7,6 @@
         "**/venv/**": true,
         "**/*.pyc": true,
         "**/__pycache__": true,
-      }
+      },
+      "restructuredtext.confPath": "${workspaceFolder}/docs/source"
 }

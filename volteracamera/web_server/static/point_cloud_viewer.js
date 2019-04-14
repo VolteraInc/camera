@@ -72,7 +72,7 @@ var PointCloudViewer = function () {
         //Adding control buttons
         var buttons = [{style:"top:0px; right:0; width:75px;", id:"start", text:"Start", method:startPointCapture},
             {style:"top:25px; right:0; width:75px;", id:"stop", text:"Stop", method:stopPointCapture},
-            {style:"top:50px; right:0; width:75px;", id:"save", text:"Save", method:null},
+            {style:"top:50px; right:0; width:75px;", id:"save", text:"Save", method:savePoints},
             {style:"top:0px; left:0;", id:"x_pos", text:"x+", method:function () {pointCamera([1, 0, 0])}},
             {style:"top:0px; left:25px;", id:"x_neg", text:"x-", method:function () {pointCamera([-1, 0, 0])}},
             {style:"top:25px; left:0;", id:"y_pos", text:"y+", method:function () {pointCamera([0, 1, 0])}},
@@ -232,6 +232,25 @@ var PointCloudViewer = function () {
             });
         }
     }
+
+    function savePoints() {
+        const concat_points = (accumulator, currentValue) => accumulator + String(currentValue.x) + ", " + 
+                                                             String(currentValue.y)+ ", " +String(currentValue.z)+ 
+                                                             ", " +String(currentValue.i) + "\n";
+        let csv_file = new Blob ([points.reduce (concat_points, "")], {type:"text/csv"});
+        let file_url = URL.createObjectURL(csv_file);
+        let temp_a = document.createElement("a");
+        temp_a.href = file_url;
+        temp_a.download = "point_file.csv";
+        temp_a.type = "text/csv";
+        document.body.appendChild(temp_a);
+        temp_a.click(); 
+        setTimeout(function() {
+            document.body.removeChild(temp_a);
+            window.URL.revokeObjectURL(file_url);  
+        }, 0);
+        
+    };
 
     function getPoints() {
         const url = "/viewer/points";

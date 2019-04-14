@@ -165,7 +165,7 @@ def create_projected_image(image: np.ndarray, rvec: np.ndarray, tvec: np.ndarray
     object_points = np.array([[point[0], point[1]] for point in points ], dtype="float32")
 
     H = cv2.getPerspectiveTransform(object_points, projected_points)
-
+    
     x = np.array([ point[0] for point in projected_points ])
     y = np.array([ point[1] for point in projected_points ])
 

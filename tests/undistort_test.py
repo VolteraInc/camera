@@ -40,5 +40,15 @@ def test_file_saving_loading():
         assert np.identity(3) == pytest.approx(new_object.camera_matrix)
         assert [0, 0, 0, 1, 2] == pytest.approx(new_object.distortion)
 
+def test_direct_projection_undistortion ():
+    """
+    Test the direct applicaiton of the undistortion model compared to the opencv provided one.
+    """
+    point = np.array([0.5, 0.5, 1.0])
+    undistort = Undistort (np.array([[300, 0, 640], [0, 300, 480], [0, 0, 1]]), np.array([0.1, 0.05, -0.002, 0.002, 0.001]))
+    point_cv = undistort.project_point_with_distortion_cv(point)
+    point_direct = undistort.project_point_with_distortion(point)
+
+    np.testing.assert_array_almost_equal(point_cv, point_direct)
      
 
