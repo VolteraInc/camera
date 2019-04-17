@@ -29,7 +29,7 @@ CAL_PLANE_RX = 4
 CAL_PLANE_RY = 5
 CAL_PLANE_RZ = 6
 CAL_PLANE_OFFSET_Z = 7
-INITIAL_PARAMS = [ np.radians(180 - 45), 0, 0, 0.04, np.radians(180), 0, 0, DISTANCE_TO_SURFACE ]
+INITIAL_PARAMS = [ np.radians(180 - 45), 0, 0, 0.04, np.radiands(180), 0, 0, DISTANCE_TO_SURFACE ]
 
 
 

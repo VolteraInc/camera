@@ -8,5 +8,6 @@
         "**/*.pyc": true,
         "**/__pycache__": true,
       },
-      "restructuredtext.confPath": "${workspaceFolder}/docs/source"
+      "restructuredtext.confPath": "${workspaceFolder}/docs/source",
+      "terminal.integrated.lineHeight": 1.1,
 }
