@@ -15,27 +15,27 @@
   <div id="camera_calibration" class="calibration_tab">
     <div id="camera_params" class="calibration_params">
       <div class="cam_params">
-        <span class="cam_label_1">Fx</span>
-        <span class="cam_input_1"><input id="cam_fx" type="number"></span>
-        <span class="cam_label_3">Fy</span>
-        <span class="cam_input_3"><input id="cam_fy" type="number"></span>
+        <span class="cam_label_1">fx</span>
+        <span class="cam_input_1"><input id="cam_fx" type="number" value=5000.0 step='any'></span>
+        <span class="cam_label_3">fy</span>
+        <span class="cam_input_3"><input id="cam_fy" type="number" value=5000.0 step='any'></span>
         <span class="cam_label_2">cx</span>
-        <span class="cam_input_2"><input id="cam_cx" type="number"></span>
+        <span class="cam_input_2"><input id="cam_cx" type="number" value=1641.0 step='any'></span>
         <span class="cam_label_4">cy</span>
-        <span class="cam_input_4"><input id="cam_cy" type="number"></span>
+        <span class="cam_input_4"><input id="cam_cy" type="number" value=1232.0 step='any'></span>
         <span class="cam_label_5">Cam dx</span>
-        <span class="cam_input_5"><input id="cam_dx" type="number"></span>
+        <span class="cam_input_5"><input id="cam_dx" type="number" value=0.0 step='any'></span>
         <span class="cam_label_7">Cam dy</span>
-        <span class="cam_input_7"><input id="cam_dy" type="number"></span>
+        <span class="cam_input_7"><input id="cam_dy" type="number" value=0.0 step='any'></span>
         <span class="cam_label_9">Cam dz</span>
-        <span class="cam_input_9"><input id="cam_dz" type="number"></span>
+        <span class="cam_input_9"><input id="cam_dz" type="number" value=0.040 step='any'></span>
         <span class="cam_label_6">Cam rx</span>
-        <span class="cam_input_6"><input id="cam_dx" type="number"></span>
+        <span class="cam_input_6"><input id="cam_rx" type="number" value=0.0 step='any'></span>
         <span class="cam_label_8">Cam ry</span>
-        <span class="cam_input_8"><input id="cam_dy" type="number"></span>
+        <span class="cam_input_8"><input id="cam_ry" type="number" value=0.0 step='any'></span>
         <span class="cam_label_10">Cam rz</span>
-        <span class="cam_input_10"><input id="cam_dz" type="number"></span>
-        <span class="cam_label_12"></span>
+        <span class="cam_input_10"><input id="cam_rz" type="number" value=0.0 step='any'></span>
+        <span class="cam_label_12"><input id="cam_save" type="button" value="Save Calibration"></span>
         <span class="cam_input_12"><input id="cam_fit" type="button" value="Fit"></span>
       </div>
     </div>
@@ -53,21 +53,21 @@
   <div id="laser_calibration" class="calibration_tab">
     <div id="laser_params" class="calibration_params">
       <div class="laser_params">
-        <span class="lp_label_1">Plane Rx</span>
-        <span class="lp_input_1"><input id="lp_rx" type="number"></span>
-        <span class="lp_label_3">Plane Ry</span>
-        <span class="lp_input_3"><input id="lp_ry" type="number"></span>
-        <span class="lp_label_5">Plane Rz</span>
-        <span class="lp_input_5"><input id="lp_rz" type="number"></span>
+        <span class="lp_label_1">Plane nx</span>
+        <span class="lp_input_1"><input id="lp_nx" type="number" value=0.0 step='any'></span>
+        <span class="lp_label_3">Plane ny</span>
+        <span class="lp_input_3"><input id="lp_ny" type="number" value=0.0 step='any'></span>
+        <span class="lp_label_5">Plane nz</span>
+        <span class="lp_input_5"><input id="lp_nz" type="number" value=0.0 step='any'></span>
         <span class="lp_label_7">Plane Offset (mm)</span>
-        <span class="lp_input_7"><input id="lp_dz" type="number"></span>
+        <span class="lp_input_7"><input id="lp_pz" type="number" value=0.04 step='any'></span>
         <span class="lp_label_2">Cam dy</span>
-        <span class="lp_input_2"><input id="cam_dx" type="number"></span>
+        <span class="lp_input_2"><input id="cam_dx" type="number" value=0.0 step='any'></span>
         <span class="lp_label_4">Cam dy</span>
-        <span class="lp_input_4"><input id="cam_dy" type="number"></span>
+        <span class="lp_input_4"><input id="cam_dy" type="number" value=0.0 step='any'></span>
         <span class="lp_label_6">Cam yaw</span>
-        <span class="lp_input_6"><input id="cam_rz" type="number"></span>
-        <span class="lp_label_8"></span>
+        <span class="lp_input_6"><input id="cam_rz" type="number" value=0.0 step='any'></span>
+        <span class="lp_label_8"><input id="lp_save" type="button" value="Save Calibration"></span>
         <span class="lp_input_8"><input id="lp_fit" type="button" value="Fit"></span>
       </div>
     </div>
@@ -89,8 +89,8 @@
     {button: "laser_nav_button", tab_element: "laser_calibration_tab"},
   ]);
 
-  cal_tools.setupFileSelect(file=>{console.log(file);}, "camera_params");
-  cal_tools.setupFileSelect(file=>{console.log(file);}, "laser_params");
+  cal_tools.setupFileSelect(cal_tools.loadCameraCalibration, "camera_params");
+  cal_tools.setupFileSelect(cal_tools.loadLaserCalibration, "laser_params");
   cal_tools.setupMultipleFilesSelect(file=>{console.log(file);}, "camera_images");
   cal_tools.setupMultipleFilesSelect(file=>{console.log(file);}, "laser_images");
 

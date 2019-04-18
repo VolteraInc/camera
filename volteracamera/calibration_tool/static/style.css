@@ -11,7 +11,7 @@ body {
   max-width: 95%;
   margin: 0 auto;
   background: white;
-  height: 100vh;
+  /*height: 100vh;*/
   
 }
 
@@ -211,6 +211,7 @@ button.viewer_class {
   border-style: inset;
   overflow-wrap: break-word;
   overflow-y: scroll;
+  min-height: 600px;
 }
 
 .calibration_display {
