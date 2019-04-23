@@ -40,10 +40,13 @@
       </div>
     </div>
     <div id="camera_images" class="calibration_image_sidebar">
-      camera images
+      <ul id="camera_images_list"></ul>
+    </div>
+    <div id="image_sidebar_controls">
+      <input id="laser_image_delete" type="button" value="Delete Checked">
     </div>
     <div id="camera_preview" class="calibration_display">
-      camera preview
+      <canvas id="camera_canvas" class="cal_canvas"></canvas>
     </div>
   </div>
 </div>
@@ -72,10 +75,13 @@
       </div>
     </div>
     <div id="laser_images" class="calibration_image_sidebar">
-      laser sidebar
+      <ul id="laser_images_list"></ul>
+    </div>
+    <div id="image_sidebar_controls">
+      <input id="laser_image_delete" type="button" value="Delete Checked">
     </div>
     <div id="laser_preview" class="calibration_display">
-      laser preview
+      <canvas id="laser_canvas" class="cal_canvas"></canvas>
     </div>
   </div>
 </div>
@@ -91,8 +97,11 @@
 
   cal_tools.setupFileSelect(cal_tools.loadCameraCalibration, "camera_params");
   cal_tools.setupFileSelect(cal_tools.loadLaserCalibration, "laser_params");
-  cal_tools.setupMultipleFilesSelect(file=>{console.log(file);}, "camera_images");
-  cal_tools.setupMultipleFilesSelect(file=>{console.log(file);}, "laser_images");
-
+  cal_tools.setupMultipleFilesSelect(cal_tools.loadCameraCalibrationImage, "camera_images");
+  cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_images");
+  cal_tools.setupMultipleFilesSelect(cal_tools.loadCameraCalibrationImage, "camera_preview");
+  cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_preview");
+  cal_tools.setupCameraPreview('camera_canvas');
+  cal_tools.setupLaserPreview('laser_canvas');
 </script>
 {% endblock %}
