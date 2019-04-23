@@ -43,7 +43,7 @@
       <ul id="camera_images_list"></ul>
     </div>
     <div id="image_sidebar_controls">
-      <input id="laser_image_delete" type="button" value="Delete Checked">
+      <input id="camera_image_delete" type="button" value="Delete Checked">
     </div>
     <div id="camera_preview" class="calibration_display">
       <canvas id="camera_canvas" class="cal_canvas"></canvas>
@@ -103,5 +103,7 @@
   cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_preview");
   cal_tools.setupCameraPreview('camera_canvas');
   cal_tools.setupLaserPreview('laser_canvas');
+  cal_tools.setupCameraDeleteButton('camera_image_delete', 'camera_images_list');
+  cal_tools.setupLaserDeleteButton('laser_image_delete', 'laser_images_list');
 </script>
 {% endblock %}

@@ -21,6 +21,7 @@ function CalibrationTool() {
 
         let camera_calibration_image = {
             name: file_object.name,
+            id: "camera_"+file_object.name,
             url: "",
             img: new Image,
             loaded: false,
@@ -46,12 +47,12 @@ function CalibrationTool() {
             camera_calibration_image.loaded = false;
             camera_calibration_image.position_valid = false;
             camera_calibration_image.points_valid = false;
-            URL.revokeObjectURL(laser_calibration_image.url);
+            URL.revokeObjectURL(camera_calibration_image.url);
 
-            let image_item = document.getElementById(camera_calibration_image.name);
+            let image_item = document.getElementById(camera_calibration_image.id);
             camera_images_tab.removeChild(image_item);
             
-            delete camera_calibration_images[camera_calibration_image.name];
+            delete camera_calibration_images[camera_calibration_image.id];
         }
 
         function handleLoadCameraCalibrationImage(url) {
@@ -61,7 +62,7 @@ function CalibrationTool() {
                 camera_calibration_image.img.src = url;
             }
             let image_item = document.createElement("li");
-            image_item.id = camera_calibration_image.name;
+            image_item.id = camera_calibration_image.id;
             image_item.className = "list_item";
             let checkbox_item = document.createElement("input");
             checkbox_item.type = "checkbox";
@@ -72,16 +73,16 @@ function CalibrationTool() {
             image_item.appendChild(label_item);
             camera_images_tab.appendChild(image_item);
             image_item.addEventListener("click", selectCameraImage, false);
-            camera_calibration_images[camera_calibration_image.name] = camera_calibration_image;
+            camera_calibration_images[camera_calibration_image.id] = camera_calibration_image;
         };
 
-        if (!(camera_calibration_image.name in camera_calibration_images)) {
+        if (!(camera_calibration_image.id in camera_calibration_images)) {
            loadImageFile(file_object, handleLoadCameraCalibrationImage);
         }
     };
 
     function selectCameraImage (e) {
-        let key = this.childNodes[1].innerHTML; //second element of list item is the text.
+        let key = "camera_" + this.childNodes[1].innerHTML; //second element of list item is the text.
         let item = camera_calibration_images[key];
         if (!item) {
             console.log ("No element with key "+key+" in camera images");
@@ -105,6 +106,7 @@ function CalibrationTool() {
 
         let laser_calibration_image = {
             name: file_object.name,
+            id: "laser_"+file_object.name,
             url: "",
             img: new Image,
             loaded: false,
@@ -133,10 +135,10 @@ function CalibrationTool() {
             URL.revokeObjectURL(laser_calibration_image.url);
             delete laser_calibration_image.img;
 
-            let image_item = document.getElementById(laser_calibration_image.name);
+            let image_item = document.getElementById(laser_calibration_image.id);
             laser_images_tab.removeChild(image_item);
             
-            delete laser_calibration_images[laser_calibration_image.name];
+            delete laser_calibration_images[laser_calibration_image.id];
         }
 
         function handleLoadLaserCalibrationImage(url) {
@@ -146,7 +148,7 @@ function CalibrationTool() {
                 laser_calibration_image.img.src = url;
             }
             let image_item = document.createElement("li");
-            image_item.id = laser_calibration_image.name;
+            image_item.id = laser_calibration_image.id;
             image_item.className = "list_item";
             let checkbox_item = document.createElement("input");
             checkbox_item.type = "checkbox";
@@ -158,16 +160,16 @@ function CalibrationTool() {
             image_item.addEventListener("click", selectLaserImage, false);
             laser_images_tab.appendChild(image_item);
 
-            laser_calibration_images[laser_calibration_image.name] = laser_calibration_image;
+            laser_calibration_images[laser_calibration_image.id] = laser_calibration_image;
         };
 
-        if (!(laser_calibration_image.name in laser_calibration_images)) {
+        if (!(laser_calibration_image.id in laser_calibration_images)) {
            loadImageFile(file_object, handleLoadLaserCalibrationImage);
         }
     };
 
     function selectLaserImage (e) {
-        let key = this.childNodes[1].innerHTML; //second element of list item is the text.
+        let key = "laser_" + this.childNodes[1].innerHTML; //second element of list item is the text.
         let item = laser_calibration_images[key];
         if (!item) {
             console.log ("No element with key "+key+" in laser images");
@@ -515,6 +517,39 @@ function CalibrationTool() {
         };
     }
 
+    function setupCameraDeleteButton (button_id, list_ul_id) {
+        setupDeleteButton(button_id, list_ul_id, "camera");
+    }
+
+    function setupLaserDeleteButton (button_id, list_ul_id) {
+        setupDeleteButton(button_id, list_ul_id, "laser");
+    }
+
+    function setupDeleteButton (button_id, list_ul_id, tab_name) {
+        let button = document.getElementById (button_id);
+
+        button.addEventListener("click", function () {
+            let list = document.getElementById (list_ul_id);
+    
+            if (!list.childNodes || list.childNodes.length == 0) return;
+
+            for (let i=0; i<list.childNodes.length; i++) {
+                let item = list.childNodes[i];
+                if (item.nodeName == "LI") {
+                    if (item.firstChild.checked) {
+                        let key = tab_name + "_" + item.childNodes[1].innerHTML;
+                        if (tab_name === "camera") {
+                            camera_calibration_images[key].destroyItem();
+                        } else {
+                            laser_calibration_images[key].destroyItem();
+                        }
+                        i--;
+                    }
+                }
+            }
+        }, false);
+    }
+
     return {
         setupTabs: setupTabs,
         setupMultipleFilesSelect: setupMultipleFilesSelect,
@@ -525,6 +560,8 @@ function CalibrationTool() {
         loadLaserCalibrationImage: loadLaserCalibrationImage,
         setupCameraPreview: setupCameraPreview,
         setupLaserPreview: setupLaserPreview,
+        setupCameraDeleteButton: setupCameraDeleteButton,
+        setupLaserDeleteButton: setupLaserDeleteButton,
     };
 
 };
