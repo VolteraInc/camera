@@ -61,52 +61,6 @@ nav ul li a, nav ul li span, header .action {
   padding: 0.5rem;
 }
 
-#cal_canvas {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  border: 1px solid black
-}
-
-
-/* Grid for content area */
-#split-content {
-    display: inline-grid;
-    grid-template-columns: 4% 96%;
-    width: 100%;
-}
-
-#hideable-images {
-    display: none;    
-}
-
-#image-sidebar {
-  /* height: 100%;
-  position: fixed; */
-  z-index: 1;
-  top: 0;
-  left: 0;
-  border: 1px solid black;
-  background: lightgrey;
-  margin: 0.5em 0.5em;
-}
-
-#viewer_container {
-  width: auto;
-  position: relative;
-  height: 85vh;
-  border: 1px solid black;
-  margin-bottom: 0px;
-}
-.viewer_class {
-  position: absolute;
-  z-index: 99;
-}
-
-button.viewer_class {
-  width: 25px;
-  height: 25px;
-}
 
 .bar{width:100%;overflow:hidden}
 .bar .bar-item{padding:8px 16px;float:left;width:auto;border:none;display:block;outline:0}
@@ -115,16 +69,22 @@ button.viewer_class {
 .bar-button{border:none;display:inline-block;padding:8px 16px;vertical-align:middle;overflow:hidden;text-decoration:none;color:inherit;background-color:inherit;text-align:center;cursor:pointer;white-space:nowrap}
 .bar-button:hover{box-shadow:0 8px 16px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19)}
 
+.tab {
+  height: 100vh;
+  width: 100vw;
+}
+
 .calibration_tab {
   display: grid;
-  grid-template-columns: 30% auto;
-  grid-template-rows: 2fr 8fr 1fr;
+  grid-template-columns: 30% 70%;
+  grid-template-rows: 15% auto 10%;
   grid-template-areas:
     "params params"
     "image_sidebar display"
     "image_sidebar_controls display";
   grid-gap: 10px;
   width: 90vw;
+  height: 100%;
 }
 
 .calibration_params {
@@ -138,11 +98,13 @@ button.viewer_class {
 
 .calibration_image_sidebar {
   grid-area: image_sidebar;
+}
+
+#image_list_div {
   background-color: lightgrey;
   border-style: inset;
-  overflow-wrap: break-word;
-  overflow-y: scroll;
-  min-height: 600px;
+  overflow: auto;
+  height: 600px;
 }
 
 .calibration_display {
@@ -222,6 +184,9 @@ button.viewer_class {
   overflow: hidden; 
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.list_item #selected {
+  border: 1px solid black;
 }
 
 .inline_checkbox {

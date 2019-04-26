@@ -61,7 +61,7 @@ if __name__=="__main__":
         file_stem = file_path.stem
 
         pos = re.findall(r'(\d+(?:\.\d+)?)', file_stem)
-        print ("{}, {}, {}, {}, {}".format(pos[1], pos[2], pos[3], mean_value[0], mean_value[1])) #Is this the problem, flipped intrinsics?
+        print ("{}, {}, {}, {}, {}".format(pos[1], pos[2], pos[3], mean_value[0], mean_value[1]))
 
 
 

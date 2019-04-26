@@ -40,12 +40,18 @@
       </div>
     </div>
     <div id="camera_images" class="calibration_image_sidebar">
-      <ul id="camera_images_list"></ul>
+      <h2>Intrinsics Image List</h2>
+      <div id="image_list_div">
+        <ul id="camera_images_list"></ul>
+      </div>
     </div>
     <div id="image_sidebar_controls">
       <input id="camera_image_delete" type="button" value="Delete Checked">
+      <input id="camera_image_select_all" type="button" value="Select All" /> <br/>
+      <input type="file" id="camera_image_load" name="files[]" multiple />
     </div>
     <div id="camera_preview" class="calibration_display">
+      <h2>Intrinsics Preview</h2>
       <canvas id="camera_canvas" class="cal_canvas"></canvas>
     </div>
   </div>
@@ -75,12 +81,18 @@
       </div>
     </div>
     <div id="laser_images" class="calibration_image_sidebar">
-      <ul id="laser_images_list"></ul>
+      <h2>Laser Image List</h2>
+      <div id="image_list_div">
+        <ul id="laser_images_list"></ul>
+      </div>
     </div>
     <div id="image_sidebar_controls">
       <input id="laser_image_delete" type="button" value="Delete Checked">
+      <input id="camera_image_select_all" type="button" value="Select All"> <br/>
+      <input type="file" id="laser_image_load" name="files[]" multiple />
     </div>
     <div id="laser_preview" class="calibration_display">
+      <h2>Laser Preview</h2>
       <canvas id="laser_canvas" class="cal_canvas"></canvas>
     </div>
   </div>
@@ -101,6 +113,8 @@
   cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_images");
   cal_tools.setupMultipleFilesSelect(cal_tools.loadCameraCalibrationImage, "camera_preview");
   cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_preview");
+  cal_tools.setupMultipleFilesSelect(cal_tools.loadCameraCalibrationImage, "camera_image_load");
+  cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_image_load");
   cal_tools.setupCameraPreview('camera_canvas');
   cal_tools.setupLaserPreview('laser_canvas');
   cal_tools.setupCameraDeleteButton('camera_image_delete', 'camera_images_list');

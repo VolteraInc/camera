@@ -1,4 +1,9 @@
 from flask import jsonify, session, request
+from pathlib import Path
+import re
+import base64
+import cv2
+import numpy as np
 
 from . import bp
 from volteracamera.analysis.plane import Plane
@@ -20,7 +25,19 @@ def laser_calibration():
 
 @bp.route('/find_laser_points', methods=["POST"])
 def find_laser_points():
-    pass
+    json_object = request.get_json()
+    if "image_data" not in json_object:
+        return jsonify ({"success": False, "message":"No image data in request.", "points":[]})
+
+    image_string = json_object["image_data"]
+    image_string = image_string[image_string.find(',')+1:]
+    image_base64 = base64.b64decode(image_string)
+    nparr = np.fromstring(image_base64, np.uint8)
+    # decode image
+    img = cv2.imdecode(nparr, cv2.IMREAD_ANYCOLOR)
+    
+    points = []
+    return jsonify({"success": False, "message":"Method not implemented", "points": points})
 
 @bp.route('/parse_laser_height', methods=["POST"])
 def find_laser_position ():

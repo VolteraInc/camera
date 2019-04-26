@@ -55,6 +55,8 @@ function CalibrationTool() {
                 }
                 camera_calibration_image.position = json_object.position;
                 camera_calibration_image.position_valid = true;
+                let list_item = document.getElementById(camera_calibration_image.id);
+                list_item.childNodes[1].style.color="orange";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -66,7 +68,7 @@ function CalibrationTool() {
             try {
                 let response = await fetch(requests.camera_find_point, {
                     method: 'POST',
-                    body: JSON.stringify({image_data: camera_calibration_image.url}),
+                    body: JSON.stringify({image_data: laser_calibration_image.url}),
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -78,6 +80,8 @@ function CalibrationTool() {
                 }
                 camera_calibration_image.image_point = json_object.point;
                 camera_calibration_image.point_valid = true;
+                let list_item = document.getElementById(camera_calibration_image.id);
+                list_item.childNodes[1].style.color="green";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -112,6 +116,7 @@ function CalibrationTool() {
             image_item.appendChild(checkbox_item);
             let label_item = document.createElement("label");
             label_item.innerHTML = camera_calibration_image.name;
+            label_item.style.color = "red";
             image_item.appendChild(label_item);
             camera_images_tab.appendChild(image_item);
             image_item.addEventListener("click", selectCameraImage, false);
@@ -149,7 +154,6 @@ function CalibrationTool() {
             camera_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
         }
         if (item.point_valid) {
-            console.log("Drawing point " + item.image_point + " " + item.img.width + " " + item.img.height);
             camera_preview_controls.drawPoint(item.image_point, [item.img.width, item.img.height]);
         }
     };
@@ -188,8 +192,10 @@ function CalibrationTool() {
                     console.log(json_object.message);
                     return false;
                 }
-                laser_calibration_image.position = json_object.position;
+                laser_calibration_image.position = [0, 0, json_object.height];
                 laser_calibration_image.position_valid = true;
+                let list_item = document.getElementById(laser_calibration_image.id);
+                list_item.childNodes[1].style.color="orange";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -201,7 +207,7 @@ function CalibrationTool() {
             try {
                 let response = await fetch(requests.laser_find_points, {
                     method: 'POST',
-                    body: JSON.stringify({image: laser_calibration_image.url}),
+                    body: JSON.stringify({image_data: laser_calibration_image.url}),
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -213,6 +219,8 @@ function CalibrationTool() {
                 }
                 laser_calibration_image.image_points = json_object.points;
                 laser_calibration_image.points_valid = true;
+                let list_item = document.getElementById(camera_calibration_image.id);
+                list_item.childNodes[1].style.color="green";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -248,6 +256,7 @@ function CalibrationTool() {
             image_item.appendChild(checkbox_item);
             let label_item = document.createElement("label");
             label_item.innerHTML = laser_calibration_image.name;
+            label_item.style.color = "red";
             image_item.appendChild(label_item);
             image_item.addEventListener("click", selectLaserImage, false);
             laser_images_tab.appendChild(image_item);
@@ -437,17 +446,18 @@ function CalibrationTool() {
             console.log(file_object.name + " is not an image file.");
             return;
         }
+        return new Promise ( (resolve, reject) => { 
+            var reader = new FileReader();
+            // Closure to capture the file information.
+            reader.onloadend = function (e) {
+                let url = reader.result;
+                handle_callback(url);
+                resolve(); 
+            };
 
-        var reader = new FileReader();
-        // Closure to capture the file information.
-        reader.onloadend = function (e) {
-            let url = reader.result;
-
-            handle_callback(url);
-        };
-
-        // Read in the image file as a data URL.
-        reader.readAsDataURL(file_object);
+            // Read in the image file as a data URL.
+            reader.readAsDataURL(file_object);
+        });
     }
 
     /**
@@ -522,8 +532,13 @@ function CalibrationTool() {
         let callback_function = files_select_callback;
 
         let element = document.getElementById(element_id);
-        element.addEventListener("drop", handleMultipleFilesSelect, false);
-        element.addEventListener("dragover", handleDragOver, false);
+
+        if (element.type === "file"){
+            element.addEventListener("change", handleMultipleFilesSelect, false);
+        } else {
+            element.addEventListener("drop", handleMultipleFilesSelect, false);
+            element.addEventListener("dragover", handleDragOver, false);
+        }
 
         function handleDragOver(evt) {
             evt.stopPropagation();
@@ -535,7 +550,12 @@ function CalibrationTool() {
             evt.stopPropagation();
             evt.preventDefault();
 
-            let files = Array.from(evt.dataTransfer.files);
+            let files = []
+            try {
+                files = Array.from(evt.dataTransfer.files);
+            } catch (e) {
+                files = Array.from(evt.target.files);
+            }
             if (!files.length) {
                 return; //no files passed
             }
@@ -555,7 +575,7 @@ function CalibrationTool() {
             let y = image_point[1] / original_size[1] * canvas.height;
             ctx.beginPath();
             ctx.fillStyle = "green";
-            ctx.arc(x, y, 10, 0, 2 * Math.PI);
+            ctx.arc(x, y, 4, 0, 2 * Math.PI);
             ctx.stroke();
             ctx.fill();
         };
@@ -609,6 +629,7 @@ function CalibrationTool() {
 
         function drawHeader (header_text) {
             ctx.font = "20px Georgia";
+            ctx.fillStyle = "black";
             ctx.fillText(header_text, 10, 30);
         }
 
