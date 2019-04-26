@@ -29,7 +29,7 @@ def extract_feature_position (image: np.ndarray):
     indexes = np.transpose(np.nonzero(inverted))
     mean_value = np.mean(indexes, axis=0)
     
-    return mean_value
+    return [mean_value[1], mean_value[0]] #to correct for mismatch between numpy and opencv
 
 def preview_image(image: np.ndarray, position: list, timeout = 0):
     cv2.circle(image, (int(position[1]), int(position[0])), 25, (0, 0, 255), 5)
@@ -61,7 +61,7 @@ if __name__=="__main__":
         file_stem = file_path.stem
 
         pos = re.findall(r'(\d+(?:\.\d+)?)', file_stem)
-        print ("{}, {}, {}, {}, {}".format(pos[1], pos[2], pos[3], mean_value[0], mean_value[1]))
+        print ("{}, {}, {}, {}, {}".format(pos[1], pos[2], pos[3], mean_value[0], mean_value[1])) #Is this the problem, flipped intrinsics?
 
 
 

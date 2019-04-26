@@ -5,6 +5,10 @@ function CalibrationTool() {
     const requests = {
         laser_calibration: "/api/laser_calibration",
         camera_calibration: "/api/camera_calibration",
+        camera_find_point: "/api/camera_find_point",
+        parse_camera_position: "/api/parse_camera_position",
+        laser_find_points: "/api/find_laser_points",
+        parse_laser_height: "/api/parse_laser_height",
     };
 
     let camera_calibration_object;
@@ -36,11 +40,49 @@ function CalibrationTool() {
         };
 
         async function handleParseFilenameForPosition() {
-
+            try {
+                let response = await fetch (requests.parse_camera_position, {
+                    method: 'POST',
+                    body: JSON.stringify({filename: camera_calibration_image.name }),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                let json_object = await response.json();
+                if (!json_object.success){
+                    console.log(json_object.message);
+                    return false;
+                }
+                camera_calibration_image.position = json_object.position;
+                camera_calibration_image.position_valid = true;
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
+            return true;
         };
 
         async function handleFindCalPoints() {
-
+            try {
+                let response = await fetch(requests.camera_find_point, {
+                    method: 'POST',
+                    body: JSON.stringify({image_data: camera_calibration_image.url}),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                let json_object = await response.json();
+                if (!json_object.success) {
+                    console.log (json_object.message);
+                    return false;
+                }
+                camera_calibration_image.image_point = json_object.point;
+                camera_calibration_image.point_valid = true;
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
+            return true;
         };
 
         function handleDestroyItem() {
@@ -77,7 +119,18 @@ function CalibrationTool() {
         };
 
         if (!(camera_calibration_image.id in camera_calibration_images)) {
-           loadImageFile(file_object, handleLoadCameraCalibrationImage);
+            try {
+                await loadImageFile(file_object, handleLoadCameraCalibrationImage);
+            } catch (e) {
+                console.log(e);
+                return;
+            }
+            if ( !await handleParseFilenameForPosition() ) {
+                return;
+            }
+            if ( !await handleFindCalPoints() ) {
+                return;
+            }
         }
     };
 
@@ -96,11 +149,12 @@ function CalibrationTool() {
             camera_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
         }
         if (item.point_valid) {
-            camera_preview_controls.drawPoint(item.image_point, [item.width, item.height]);
+            console.log("Drawing point " + item.image_point + " " + item.img.width + " " + item.img.height);
+            camera_preview_controls.drawPoint(item.image_point, [item.img.width, item.img.height]);
         }
     };
 
-    function loadLaserCalibrationImage(file_object) {
+    async function loadLaserCalibrationImage(file_object) {
 
         let laser_images_tab = document.getElementById('laser_images_list');
 
@@ -121,11 +175,49 @@ function CalibrationTool() {
         };
 
         async function handleParseFilenameForPosition() {
-
+            try {
+                let response = await fetch (requests.parse_laser_height, {
+                    method: 'POST',
+                    body: JSON.stringify({filename: laser_calibration_image.name }),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                let json_object = await response.json();
+                if (!json_object.success){
+                    console.log(json_object.message);
+                    return false;
+                }
+                laser_calibration_image.position = json_object.position;
+                laser_calibration_image.position_valid = true;
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
+            return true;
         };
 
         async function handleFindLaserPoints() {
-
+            try {
+                let response = await fetch(requests.laser_find_points, {
+                    method: 'POST',
+                    body: JSON.stringify({image: laser_calibration_image.url}),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                let json_object = await response.json();
+                if (!json_object.success) {
+                    console.log (json_object.message);
+                    return false;
+                }
+                laser_calibration_image.image_points = json_object.points;
+                laser_calibration_image.points_valid = true;
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
+            return true;
         };
 
         function handleDestroyItem() {
@@ -164,7 +256,18 @@ function CalibrationTool() {
         };
 
         if (!(laser_calibration_image.id in laser_calibration_images)) {
-           loadImageFile(file_object, handleLoadLaserCalibrationImage);
+            try {
+                await loadImageFile(file_object, handleLoadLaserCalibrationImage);
+            } catch (e) {
+                console.log(e);
+                return;
+            }
+            if (! await handleParseFilenameForPosition() ) {
+                return;
+            }
+            if (! await handleFindLaserPoints() ) {
+                return;
+            }
         }
     };
 
@@ -183,7 +286,7 @@ function CalibrationTool() {
             laser_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
         }
         if (item.points_valid) {
-            laser_preview_controls.drawPoints(item.laser_points, [item.width, item.height]);
+            laser_preview_controls.drawPoints(item.laser_points, [item.img.width, item.img.height]);
         }
     }
 
@@ -506,7 +609,7 @@ function CalibrationTool() {
 
         function drawHeader (header_text) {
             ctx.font = "20px Georgia";
-            ctx.fillText("header_text", 10, 50);
+            ctx.fillText(header_text, 10, 30);
         }
 
         return {
