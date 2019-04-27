@@ -350,7 +350,7 @@ function CalibrationTool() {
             if (type_string === "camera") {
                 item = camera_calibration_images[key];
             } else {
-                item = laser_calibration_imags[key];
+                item = laser_calibration_images[key];
             }
             if (!item) {
                 console.log("No element with key " + key + " in " + type_string + " images");
@@ -365,6 +365,55 @@ function CalibrationTool() {
 
         return selectImage;
     };
+
+    /**
+     * Handle the up down key presses.
+     * @param {event} evt 
+     */
+    function handleKeyPress (evt) {
+        let selected_values = Array.from(document.getElementsByClassName("selected_item"));
+        let tab_type = getCurrentTab();
+        selected_values = selected_values.filter((item)=>item.id.includes(tab_type));
+        //filter by laser or camera
+        if (evt.code === "ArrowDown") {
+            if (selected_values.length !== 0) { //items are already selected
+                let selected_item = selected_values[0];
+                let next_item = selected_item.nextSibling;
+                if (next_item && next_item.nodeName === "LI") {
+                    iterateList((item) => { item.classList.remove("selected_item") })
+                    next_item.classList.add("selected_item")
+                    let next_image = tab_type === "laser" ? laser_calibration_images[next_item.id] : camera_calibration_images[next_item.id];
+                    setupUpdateImage(tab_type)(next_image);
+                }
+            } else {
+                let selected_item = document.getElementById(tab_type + "_images_list").firstChild;
+                if (selected_item && selected_item.nodeName === "LI") {
+                    selected_item.classList.add("selected_item");
+                    let image = tab_type === "laser" ? laser_calibration_images[selected_item.id] : camera_calibration_images[selected_item.id];
+                    setupUpdateImage(tab_type)(image);
+                }
+            }
+        }
+        else if (evt.code === "ArrowUp") {
+            if (selected_values.length !== 0) { //items are already selected
+                let selected_item = selected_values[0];
+                let previous_item = selected_item.previousSibling;
+                if (previous_item && previous_item.nodeName === "LI") {
+                    iterateList((item) => { item.classList.remove("selected_item") })
+                    previous_item.classList.add("selected_item")
+                    let previous_image = tab_type === "laser" ? laser_calibration_images[previous_item.id] : camera_calibration_images[previous_item.id];
+                    setupUpdateImage(tab_type)(previous_image);
+                }
+            } else {
+                let selected_item = document.getElementById(tab_type + "_images_list").lastChild;
+                if (selected_item && selected_item.nodeName === "LI") {
+                    selected_item.classList.add("selected_item");
+                    let image = tab_type === "laser" ? laser_calibration_images[selected_item.id] : camera_calibration_images[selected_item.id];
+                    setupUpdateImage(tab_type)(image);
+                }
+            }
+}
+    }
 
     /**
      * startup function, called on initialization.
@@ -388,6 +437,7 @@ function CalibrationTool() {
             console.log(e);
         }
 
+        document.addEventListener('keydown', handleKeyPress);
     })();
 
 
