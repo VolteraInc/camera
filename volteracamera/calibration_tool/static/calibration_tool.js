@@ -25,7 +25,7 @@ function CalibrationTool() {
 
         let camera_calibration_image = {
             name: file_object.name,
-            id: "camera_"+file_object.name,
+            id: "camera_" + file_object.name,
             url: "",
             img: new Image,
             loaded: false,
@@ -41,22 +41,22 @@ function CalibrationTool() {
 
         async function handleParseFilenameForPosition() {
             try {
-                let response = await fetch (requests.parse_camera_position, {
+                let response = await fetch(requests.parse_camera_position, {
                     method: 'POST',
-                    body: JSON.stringify({filename: camera_calibration_image.name }),
+                    body: JSON.stringify({ filename: camera_calibration_image.name }),
                     headers: {
                         "Content-Type": "application/json",
                     },
                 });
                 let json_object = await response.json();
-                if (!json_object.success){
+                if (!json_object.success) {
                     console.log(json_object.message);
                     return false;
                 }
                 camera_calibration_image.position = json_object.position;
                 camera_calibration_image.position_valid = true;
                 let list_item = document.getElementById(camera_calibration_image.id);
-                list_item.childNodes[1].style.color="orange";
+                list_item.childNodes[1].style.color = "orange";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -68,20 +68,20 @@ function CalibrationTool() {
             try {
                 let response = await fetch(requests.camera_find_point, {
                     method: 'POST',
-                    body: JSON.stringify({image_data: laser_calibration_image.url}),
+                    body: JSON.stringify({ image_data: camera_calibration_image.url }),
                     headers: {
                         "Content-Type": "application/json",
                     },
                 });
                 let json_object = await response.json();
                 if (!json_object.success) {
-                    console.log (json_object.message);
+                    console.log(json_object.message);
                     return false;
                 }
                 camera_calibration_image.image_point = json_object.point;
                 camera_calibration_image.point_valid = true;
                 let list_item = document.getElementById(camera_calibration_image.id);
-                list_item.childNodes[1].style.color="green";
+                list_item.childNodes[1].style.color = "green";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -97,7 +97,7 @@ function CalibrationTool() {
 
             let image_item = document.getElementById(camera_calibration_image.id);
             camera_images_tab.removeChild(image_item);
-            
+
             delete camera_calibration_images[camera_calibration_image.id];
         }
 
@@ -119,7 +119,7 @@ function CalibrationTool() {
             label_item.style.color = "red";
             image_item.appendChild(label_item);
             camera_images_tab.appendChild(image_item);
-            image_item.addEventListener("click", selectCameraImage, false);
+            image_item.addEventListener("click", setupImageSelector("camera"), false);
             camera_calibration_images[camera_calibration_image.id] = camera_calibration_image;
         };
 
@@ -130,31 +130,12 @@ function CalibrationTool() {
                 console.log(e);
                 return;
             }
-            if ( !await handleParseFilenameForPosition() ) {
+            if (!await handleParseFilenameForPosition()) {
                 return;
             }
-            if ( !await handleFindCalPoints() ) {
+            if (!await handleFindCalPoints()) {
                 return;
             }
-        }
-    };
-
-    function selectCameraImage (e) {
-        let key = "camera_" + this.childNodes[1].innerHTML; //second element of list item is the text.
-        let item = camera_calibration_images[key];
-        if (!item) {
-            console.log ("No element with key "+key+" in camera images");
-            return;
-        }
-        if (item.loaded) {
-            camera_preview_controls.clear();
-            camera_preview_controls.drawImage(item.img);
-        }
-        if (item.position_valid) {
-            camera_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
-        }
-        if (item.point_valid) {
-            camera_preview_controls.drawPoint(item.image_point, [item.img.width, item.img.height]);
         }
     };
 
@@ -164,7 +145,7 @@ function CalibrationTool() {
 
         let laser_calibration_image = {
             name: file_object.name,
-            id: "laser_"+file_object.name,
+            id: "laser_" + file_object.name,
             url: "",
             img: new Image,
             loaded: false,
@@ -180,22 +161,22 @@ function CalibrationTool() {
 
         async function handleParseFilenameForPosition() {
             try {
-                let response = await fetch (requests.parse_laser_height, {
+                let response = await fetch(requests.parse_laser_height, {
                     method: 'POST',
-                    body: JSON.stringify({filename: laser_calibration_image.name }),
+                    body: JSON.stringify({ filename: laser_calibration_image.name }),
                     headers: {
                         "Content-Type": "application/json",
                     },
                 });
                 let json_object = await response.json();
-                if (!json_object.success){
+                if (!json_object.success) {
                     console.log(json_object.message);
                     return false;
                 }
                 laser_calibration_image.position = [0, 0, json_object.height];
                 laser_calibration_image.position_valid = true;
                 let list_item = document.getElementById(laser_calibration_image.id);
-                list_item.childNodes[1].style.color="orange";
+                list_item.childNodes[1].style.color = "orange";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -207,20 +188,20 @@ function CalibrationTool() {
             try {
                 let response = await fetch(requests.laser_find_points, {
                     method: 'POST',
-                    body: JSON.stringify({image_data: laser_calibration_image.url}),
+                    body: JSON.stringify({ image_data: laser_calibration_image.url }),
                     headers: {
                         "Content-Type": "application/json",
                     },
                 });
                 let json_object = await response.json();
                 if (!json_object.success) {
-                    console.log (json_object.message);
+                    console.log(json_object.message);
                     return false;
                 }
                 laser_calibration_image.image_points = json_object.points;
                 laser_calibration_image.points_valid = true;
                 let list_item = document.getElementById(camera_calibration_image.id);
-                list_item.childNodes[1].style.color="green";
+                list_item.childNodes[1].style.color = "green";
             } catch (e) {
                 console.log(e);
                 return false;
@@ -237,7 +218,7 @@ function CalibrationTool() {
 
             let image_item = document.getElementById(laser_calibration_image.id);
             laser_images_tab.removeChild(image_item);
-            
+
             delete laser_calibration_images[laser_calibration_image.id];
         }
 
@@ -258,7 +239,7 @@ function CalibrationTool() {
             label_item.innerHTML = laser_calibration_image.name;
             label_item.style.color = "red";
             image_item.appendChild(label_item);
-            image_item.addEventListener("click", selectLaserImage, false);
+            image_item.addEventListener("click", setupImageSelector("laser"), false);
             laser_images_tab.appendChild(image_item);
 
             laser_calibration_images[laser_calibration_image.id] = laser_calibration_image;
@@ -271,34 +252,123 @@ function CalibrationTool() {
                 console.log(e);
                 return;
             }
-            if (! await handleParseFilenameForPosition() ) {
+            if (! await handleParseFilenameForPosition()) {
                 return;
             }
-            if (! await handleFindLaserPoints() ) {
+            if (! await handleFindLaserPoints()) {
                 return;
             }
         }
     };
 
-    function selectLaserImage (e) {
-        let key = "laser_" + this.childNodes[1].innerHTML; //second element of list item is the text.
-        let item = laser_calibration_images[key];
-        if (!item) {
-            console.log ("No element with key "+key+" in laser images");
-            return;
+    /**
+     * Get the name of the current tab (camera or laser)
+     */
+    function getCurrentTab() {
+        const tabs = Array.from(document.getElementsByClassName('tabs'));
+        let active_tab;
+        tabs.forEach(tab => {
+            if (tab.style.display === "block") {
+                active_tab = tab;
+            }
+        });
+        if (active_tab.id.includes("camera")) {
+            return "camera";
+        } else if (active_tab.id.includes("laser")) {
+            return "laser";
         }
-        if (item.loaded) {
-            laser_preview_controls.clear();
-            laser_preview_controls.drawImage(item.img);
+        return;
+    }
+
+    /**
+     * run through the list of available items in the active tab and run item the passed in function on them.
+     * @param {function (item)} item_action_function 
+     */
+    function iterateList(item_action_function) {
+        let current_tab = getCurrentTab();
+        let list_item = document.getElementById(current_tab + "_images_list");
+        for (let i = 0; i < list_item.childNodes.length; i++) {
+            let item = list_item.childNodes[i];
+            if (item && item.nodeName === "LI") {
+                item_action_function(item);
+            }
         }
-        if (item.position_valid) {
-            laser_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
+    };
+
+    /**
+     * returns the image updater for the camera or laser.
+     * @param {string} which_type (camera or laser) 
+     */
+    function setupUpdateImage(which_type) {
+
+        function handleUpdateLaserImage(item) {
+            if (item.loaded) {
+                laser_preview_controls.clear();
+                laser_preview_controls.drawImage(item.img);
+            }
+            if (item.position_valid) {
+                laser_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
+            }
+            if (item.points_valid) {
+                laser_preview_controls.drawPoints(item.laser_points, [item.img.width, item.img.height]);
+            }
+        };
+
+        function handleUpdateCameraImage(item) {
+            if (item.loaded) {
+                camera_preview_controls.clear();
+                camera_preview_controls.drawImage(item.img);
+            }
+            if (item.position_valid) {
+                camera_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
+            }
+            if (item.point_valid) {
+                camera_preview_controls.drawPoint(item.image_point, [item.img.width, item.img.height]);
+            }
         }
-        if (item.points_valid) {
-            laser_preview_controls.drawPoints(item.laser_points, [item.img.width, item.img.height]);
+
+        if (which_type === "camera") {
+            return handleUpdateCameraImage;
+        } else if (which_type === "laser") {
+            return handleUpdateLaserImage;
         }
     }
 
+
+    /**
+     * Generates the function for handling image selection using a mouse.
+     * @param {string} which_type (camera or laser)
+     */
+    function setupImageSelector(which_type) {
+
+        let type_string = which_type;
+        let handleUpdateImage = setupUpdateImage(which_type);
+
+        function selectImage(e) {
+            let key = type_string + "_" + this.childNodes[1].innerHTML; //second element of list item is the text.
+            let item;
+            if (type_string === "camera") {
+                item = camera_calibration_images[key];
+            } else {
+                item = laser_calibration_imags[key];
+            }
+            if (!item) {
+                console.log("No element with key " + key + " in " + type_string + " images");
+                return;
+            }
+            iterateList((item)=>{
+                item.classList.remove("selected_item")
+            });
+            document.getElementById(item.id).classList.add("selected_item");
+            handleUpdateImage(item);
+        };
+
+        return selectImage;
+    };
+
+    /**
+     * startup function, called on initialization.
+     */
     (async function startUp() {
 
         try {
@@ -446,13 +516,13 @@ function CalibrationTool() {
             console.log(file_object.name + " is not an image file.");
             return;
         }
-        return new Promise ( (resolve, reject) => { 
+        return new Promise((resolve, reject) => {
             var reader = new FileReader();
             // Closure to capture the file information.
             reader.onloadend = function (e) {
                 let url = reader.result;
                 handle_callback(url);
-                resolve(); 
+                resolve();
             };
 
             // Read in the image file as a data URL.
@@ -533,7 +603,7 @@ function CalibrationTool() {
 
         let element = document.getElementById(element_id);
 
-        if (element.type === "file"){
+        if (element.type === "file") {
             element.addEventListener("change", handleMultipleFilesSelect, false);
         } else {
             element.addEventListener("drop", handleMultipleFilesSelect, false);
@@ -563,7 +633,7 @@ function CalibrationTool() {
         };
 
     };
- 
+
     function setupCameraPreview(canvas_id) {
         camera_preview_controls = setupDisplayCanvas(canvas_id);
 
@@ -600,7 +670,7 @@ function CalibrationTool() {
         };
     }
 
-    function setupDisplayCanvas (canvas_id) {
+    function setupDisplayCanvas(canvas_id) {
 
         let canvas = document.getElementById(canvas_id);
         let ctx = canvas.getContext("2d");
@@ -608,7 +678,7 @@ function CalibrationTool() {
         resize();
         canvas.addEventListener("resize", resize);
 
-        function resize(){
+        function resize() {
             let container = canvas.parentElement;
             //let aspect = canvas.height/canvas.width;
             let width = container.offsetWidth;
@@ -623,11 +693,11 @@ function CalibrationTool() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         };
 
-        function drawImage (img) {
+        function drawImage(img) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         }
 
-        function drawHeader (header_text) {
+        function drawHeader(header_text) {
             ctx.font = "20px Georgia";
             ctx.fillStyle = "black";
             ctx.fillText(header_text, 10, 30);
@@ -641,23 +711,23 @@ function CalibrationTool() {
         };
     }
 
-    function setupCameraDeleteButton (button_id, list_ul_id) {
+    function setupCameraDeleteButton(button_id, list_ul_id) {
         setupDeleteButton(button_id, list_ul_id, "camera");
     }
 
-    function setupLaserDeleteButton (button_id, list_ul_id) {
+    function setupLaserDeleteButton(button_id, list_ul_id) {
         setupDeleteButton(button_id, list_ul_id, "laser");
     }
 
-    function setupDeleteButton (button_id, list_ul_id, tab_name) {
-        let button = document.getElementById (button_id);
+    function setupDeleteButton(button_id, list_ul_id, tab_name) {
+        let button = document.getElementById(button_id);
 
         button.addEventListener("click", function () {
-            let list = document.getElementById (list_ul_id);
-    
+            let list = document.getElementById(list_ul_id);
+
             if (!list.childNodes || list.childNodes.length == 0) return;
 
-            for (let i=0; i<list.childNodes.length; i++) {
+            for (let i = 0; i < list.childNodes.length; i++) {
                 let item = list.childNodes[i];
                 if (item.nodeName == "LI") {
                     if (item.firstChild.checked) {
@@ -674,6 +744,16 @@ function CalibrationTool() {
         }, false);
     }
 
+    /**
+     * Setup the select all button. Same function for both tabs.
+     * @param {*} button_id 
+     */
+    function setupSelectAll(button_id) {
+        document.getElementById(button_id).addEventListener("click", () => {
+            iterateList((item) => { item.firstChild.checked = true; });
+        }, false);
+    }
+
     return {
         setupTabs: setupTabs,
         setupMultipleFilesSelect: setupMultipleFilesSelect,
@@ -686,6 +766,7 @@ function CalibrationTool() {
         setupLaserPreview: setupLaserPreview,
         setupCameraDeleteButton: setupCameraDeleteButton,
         setupLaserDeleteButton: setupLaserDeleteButton,
+        setupSelectAll: setupSelectAll,
     };
 
 };
