@@ -28,6 +28,8 @@ function CalibrationTool() {
             id: "camera_" + file_object.name,
             url: "",
             img: new Image,
+            width: 0,
+            height: 0,
             loaded: false,
             position: [],
             position_valid: false,
@@ -93,12 +95,15 @@ function CalibrationTool() {
             camera_calibration_image.loaded = false;
             camera_calibration_image.position_valid = false;
             camera_calibration_image.points_valid = false;
-            URL.revokeObjectURL(camera_calibration_image.url);
+            try {
+                URL.revokeObjectURL(camera_calibration_image.url);
+                URL.revokeObjectURL(camera_calibration_image.img.src);
+            } catch (e){
+
+            }
 
             let image_item = document.getElementById(camera_calibration_image.id);
             camera_images_tab.removeChild(image_item);
-
-            delete camera_calibration_images[camera_calibration_image.id];
         }
 
         function handleLoadCameraCalibrationImage(url) {
@@ -106,6 +111,8 @@ function CalibrationTool() {
                 camera_calibration_image.url = url;
                 camera_calibration_image.loaded = true;
                 camera_calibration_image.img.src = url;
+                camera_calibration_image.width = camera_calibration_image.img.width.valueOf();
+                camera_calibration_image.height = camera_calibration_image.img.height.valueOf();
             }
             let image_item = document.createElement("li");
             image_item.id = camera_calibration_image.id;
@@ -198,9 +205,9 @@ function CalibrationTool() {
                     console.log(json_object.message);
                     return false;
                 }
-                laser_calibration_image.image_points = json_object.points;
+                laser_calibration_image.laser_points = json_object.points;
                 laser_calibration_image.points_valid = true;
-                let list_item = document.getElementById(camera_calibration_image.id);
+                let list_item = document.getElementById(laser_calibration_image.id);
                 list_item.childNodes[1].style.color = "green";
             } catch (e) {
                 console.log(e);
@@ -213,8 +220,12 @@ function CalibrationTool() {
             laser_calibration_image.loaded = false;
             laser_calibration_image.position_valid = false;
             laser_calibration_image.points_valid = false;
-            URL.revokeObjectURL(laser_calibration_image.url);
-            delete laser_calibration_image.img;
+            try {
+                URL.revokeObjectURL(laser_calibration_image.url);
+                URL.revokeObjectURL(laser_calibration_image.img.src);
+            } catch (e) {
+
+            }
 
             let image_item = document.getElementById(laser_calibration_image.id);
             laser_images_tab.removeChild(image_item);
@@ -227,6 +238,8 @@ function CalibrationTool() {
                 laser_calibration_image.url = url;
                 laser_calibration_image.loaded = true;
                 laser_calibration_image.img.src = url;
+                laser_calibration_image.width = laser_calibration_image.img.width.valueOf();
+                laser_calibration_image.height = laser_calibration_image.img.height.valueOf();
             }
             let image_item = document.createElement("li");
             image_item.id = laser_calibration_image.id;
@@ -302,28 +315,37 @@ function CalibrationTool() {
     function setupUpdateImage(which_type) {
 
         function handleUpdateLaserImage(item) {
+            laser_preview_controls.clear();
             if (item.loaded) {
-                laser_preview_controls.clear();
                 laser_preview_controls.drawImage(item.img);
             }
             if (item.position_valid) {
                 laser_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
             }
             if (item.points_valid) {
-                laser_preview_controls.drawPoints(item.laser_points, [item.img.width, item.img.height]);
+                laser_preview_controls.drawPoints(item.laser_points);
             }
         };
 
         function handleUpdateCameraImage(item) {
+            camera_preview_controls.clear();
             if (item.loaded) {
-                camera_preview_controls.clear();
                 camera_preview_controls.drawImage(item.img);
+
+                //You only get 1. Saves memory.
+                try {
+                    URL.revokeObjectURL(item.url);
+                    URL.revokeObjectURL(item.img);
+                } catch (e) {
+
+                }
+                item.loaded = false;
             }
             if (item.position_valid) {
                 camera_preview_controls.drawHeader("(" + item.position[0] + ", " + item.position[1] + ", " + item.position[2] + ")");
             }
             if (item.point_valid) {
-                camera_preview_controls.drawPoint(item.image_point, [item.img.width, item.img.height]);
+                camera_preview_controls.drawPoint(item.image_point);
             }
         }
 
@@ -422,7 +444,6 @@ function CalibrationTool() {
 
         try {
             let laser_response = await fetch(requests.laser_calibration);
-            console.log(laser_response);
             let json_object = await laser_response.json();
             handleLaserLoad(json_object);
         } catch (e) {
@@ -690,9 +711,9 @@ function CalibrationTool() {
         let canvas = document.getElementById(canvas_id);
         let ctx = canvas.getContext("2d");
 
-        camera_preview_controls.drawPoint = function (image_point, original_size) {
-            let x = image_point[0] / original_size[0] * canvas.width;
-            let y = image_point[1] / original_size[1] * canvas.height;
+        camera_preview_controls.drawPoint = function (image_point) {
+            let x = image_point[0] / camera_preview_controls.image_width * canvas.width;
+            let y = image_point[1] / camera_preview_controls.image_height * canvas.height;
             ctx.beginPath();
             ctx.fillStyle = "green";
             ctx.arc(x, y, 4, 0, 2 * Math.PI);
@@ -707,10 +728,10 @@ function CalibrationTool() {
         let canvas = document.getElementById(canvas_id);
         let ctx = canvas.getContext("2d");
 
-        laser_preview_controls.drawPoints = function (image_points, original_size) {
+        laser_preview_controls.drawPoints = function (image_points) {
             image_points.forEach(image_point => {
-                let x = image_point[0] / original_size[0] * canvas.width;
-                let y = image_point[1] / original_size[1] * canvas.height;
+                let x = image_point[0] / laser_preview_controls.image_width * canvas.width;
+                let y = image_point[1] / laser_preview_controls.image_height * canvas.height;
                 ctx.beginPath();
                 ctx.fillStyle = "green";
                 ctx.arc(x, y, 2, 0, 2 * Math.PI);
@@ -724,6 +745,8 @@ function CalibrationTool() {
 
         let canvas = document.getElementById(canvas_id);
         let ctx = canvas.getContext("2d");
+        let image_width;
+        let image_height;
 
         resize();
         canvas.addEventListener("resize", resize);
@@ -744,6 +767,8 @@ function CalibrationTool() {
         };
 
         function drawImage(img) {
+            this.image_width = img.width;
+            this.image_height = img.height.valueOf();
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         }
 
@@ -758,6 +783,8 @@ function CalibrationTool() {
             resize: resize,
             drawImage: drawImage,
             drawHeader: drawHeader,
+            image_width: image_width,
+            image_height: image_height,
         };
     }
 

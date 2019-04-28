@@ -25,6 +25,17 @@ FILTER_SHARPEN[int(KERNEL/2)] = KERNEL
 INTERVAL = 1
 PROFILE_OFFSET = 0.0000001 #move each profile over by 0.1 um in the y direction.
 
+
+def reject_outlier (data, m = 2, image_edge_threshold=200):
+    """
+    Reject points further than m standard deviations from the median value, and away from the bottom of the sensor.
+    """
+    data_return = np.zeros (len(data))
+    indexes_away_from_bottom = data > image_edge_threshold
+    indexes = abs(data - np.median(data[indexes_away_from_bottom])) < m * np.std(data[indexes_away_from_bottom])
+    data_return[indexes] = data[indexes]
+    return data_return
+
 class LaserLineFinder (object):
     """
     A class for finding laser lines in images. This class is designed to work the 

@@ -57,5 +57,8 @@ def find_camera_position ():
 
     pos = re.findall(r'(\d+(?:\.\d+)?)', file_stem)
 
-    return jsonify ({"success": True, "message": "", "position":[float(pos[1])/1000.0, float(pos[2])/1000.0, float(pos[3])/1000.0]})
+    try:
+        return jsonify ({"success": True, "message": "", "position":[float(pos[1])/1000.0, float(pos[2])/1000.0, float(pos[3])/1000.0]})
+    except:
+        return jsonify ({"success": False, "message": "Could not parse the position from the filename.", "position":[]})
 

@@ -7,6 +7,8 @@ import numpy as np
 
 from . import bp
 from volteracamera.analysis.plane import Plane
+from volteracamera.analysis.laser_line_finder import LaserLineFinder, reject_outlier
+
 
 @bp.route('/laser_calibration', methods=["GET", "POST"])
 def laser_calibration():
@@ -35,9 +37,13 @@ def find_laser_points():
     nparr = np.fromstring(image_base64, np.uint8)
     # decode image
     img = cv2.imdecode(nparr, cv2.IMREAD_ANYCOLOR)
+    image_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    with LaserLineFinder() as finder:
+        points = finder.process(image_gray)
+    points = reject_outlier(np.asarray(points))
+    points = [ [x, y] for x, y in enumerate(points) ]
     
-    points = []
-    return jsonify({"success": False, "message":"Method not implemented", "points": points})
+    return jsonify({"success": True, "message":"", "points": points})
 
 @bp.route('/parse_laser_height', methods=["POST"])
 def find_laser_position ():
@@ -51,8 +57,11 @@ def find_laser_position ():
     file_path = Path(json_object["filename"])
     file_stem = file_path.stem
 
-    pos = float(re.findall(r'(\d+(?:\.\d+)?)', file_stem)[1])
+    try:
+        pos = float(re.findall(r'(\d+(?:\.\d+)?)', file_stem)[1])
 
-    return jsonify ({"success": True, "message": "", "height":pos})
+        return jsonify ({"success": True, "message": "", "height":pos})
+    except:
+        return jsonify ({"success": False, "message": "Could not parse the height from the filename", "height":0})
 
 

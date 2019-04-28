@@ -10,18 +10,9 @@ import numpy as np
 from pathlib import Path
 from volteracamera.analysis.undistort import Undistort
 from volteracamera.analysis.laser_fitter import LaserFitter
-from volteracamera.analysis.laser_line_finder import LaserLineFinder, point_overlay
+from volteracamera.analysis.laser_line_finder import LaserLineFinder, point_overlay, reject_outlier
 from volteracamera.analysis.laser_fitter import LaserFitter
 
-def reject_outlier (data, m = 2, image_edge_threshold=200):
-    """
-    Reject points further than m standard deviations from the median value, and away from the bottom of the sensor.
-    """
-    data_return = np.zeros (len(data))
-    indexes_away_from_bottom = data > image_edge_threshold
-    indexes = abs(data - np.median(data[indexes_away_from_bottom])) < m * np.std(data[indexes_away_from_bottom])
-    data_return[indexes] = data[indexes]
-    return data_return
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
