@@ -36,7 +36,9 @@
         <span class="cam_label_10">Cam rz</span>
         <span class="cam_input_10"><input id="cam_rz" type="number" value=0.0 step='any'></span>
         <span class="cam_label_12"><input id="cam_save" type="button" value="Save Calibration"></span>
-        <span class="cam_input_12"><input id="cam_fit" type="button" value="Fit"></span>
+        <span class="cam_input_12">
+          <input id="cam_preview" type="button" value="Preview Solution">
+          <input id="cam_fit" type="button" value="Fit"></span>
       </div>
     </div>
     <div id="camera_images" class="calibration_image_sidebar">
@@ -48,14 +50,15 @@
         <ul id="camera_images_list"></ul>
       </div>
       <div class="sidebar_bottom">
-          <input id="camera_image_delete" type="button" value="Delete Checked">
-          <input id="camera_image_select_all" type="button" value="Select All" /> <br/>
-        </div>
+        <input id="camera_image_delete" type="button" value="Delete Checked">
+        <input id="camera_image_select_all" type="button" value="Select All" /> <br />
+      </div>
     </div>
-    
+
     <div id="camera_preview" class="calibration_display">
       <h2>Intrinsics Preview</h2>
-      <canvas id="camera_canvas" class="cal_canvas"></canvas>
+      <canvas id="camera_canvas_2d" class="cal_canvas_bottom"></canvas>
+      <canvas id="camera_canvas_3d" class="cal_canvas_top" style="display: none"></canvas>
     </div>
   </div>
 </div>
@@ -73,14 +76,21 @@
         <span class="lp_input_5"><input id="lp_nz" type="number" value=0.0 step='any'></span>
         <span class="lp_label_7">Plane Offset (mm)</span>
         <span class="lp_input_7"><input id="lp_pz" type="number" value=0.04 step='any'></span>
-        <span class="lp_label_2">Cam dy</span>
-        <span class="lp_input_2"><input id="cam_dx" type="number" value=0.0 step='any'></span>
+        <span class="lp_label_2">Cam dx</span>
+        <span class="lp_input_2"><input id="lp_dx" type="number" value=0.0 step='any'></span>
         <span class="lp_label_4">Cam dy</span>
-        <span class="lp_input_4"><input id="cam_dy" type="number" value=0.0 step='any'></span>
+        <span class="lp_input_4"><input id="lp_dy" type="number" value=0.0 step='any'>
+          <input id="lp_dz" type="number" value=0.0 step='any' style="display: none;"></span>
         <span class="lp_label_6">Cam yaw</span>
-        <span class="lp_input_6"><input id="cam_rz" type="number" value=0.0 step='any'></span>
+        <span class="lp_input_6">
+          <input id="lp_rx" type="number" value=0.0 step='any' style="display: none;">
+          <input id="lp_ry" type="number" value=0.0 step='any' style="display: none;">
+          <input id="lp_rz" type="number" value=0.0 step='any'></span>
         <span class="lp_label_8"><input id="lp_save" type="button" value="Save Calibration"></span>
-        <span class="lp_input_8"><input id="lp_fit" type="button" value="Fit"></span>
+        <span class="lp_input_8">
+          <input id="lp_preview" type="button" value="Preview Solution">
+          <input id="lp_fit" type="button" value="Fit">
+        </span>
       </div>
     </div>
     <div id="laser_images" class="calibration_image_sidebar">
@@ -92,25 +102,26 @@
         <ul id="laser_images_list"></ul>
       </div>
       <div id="image_sidebar_controls" class='sidebar_bottom'>
-          <input id="laser_image_delete" type="button" value="Delete Checked">
-          <input id="laser_image_select_all" type="button" value="Select All"> <br/>
-        </div>
+        <input id="laser_image_delete" type="button" value="Delete Checked">
+        <input id="laser_image_select_all" type="button" value="Select All"> <br />
+      </div>
     </div>
-    
+
     <div id="laser_preview" class="calibration_display">
       <h2>Laser Preview</h2>
-      <canvas id="laser_canvas" class="cal_canvas"></canvas>
+      <canvas id="laser_canvas_2d" class="cal_canvas_bottom"></canvas>
+      <canvas id="laser_canvas_3d" class="cal_canvas_top"></canvas>
     </div>
   </div>
 </div>
-  
+<input type="button" id="shutdown_button" value="Shutdown" />
 <script src="{{ url_for('static', filename='calibration_tool.js') }}"></script>
 <script>
   let cal_tools = CalibrationTool();
-  
+
   cal_tools.setupTabs([
-    {button: "camera_nav_button", tab_element: "camera_calibration_tab"}, 
-    {button: "laser_nav_button", tab_element: "laser_calibration_tab"},
+    { button: "camera_nav_button", tab_element: "camera_calibration_tab" },
+    { button: "laser_nav_button", tab_element: "laser_calibration_tab" },
   ]);
 
   cal_tools.setupFileSelect(cal_tools.loadCameraCalibration, "camera_params");
@@ -121,11 +132,21 @@
   cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_preview");
   cal_tools.setupMultipleFilesSelect(cal_tools.loadCameraCalibrationImage, "camera_image_load");
   cal_tools.setupMultipleFilesSelect(cal_tools.loadLaserCalibrationImage, "laser_image_load");
-  cal_tools.setupCameraPreview('camera_canvas');
-  cal_tools.setupLaserPreview('laser_canvas');
+  cal_tools.setupCameraPreview('camera_canvas_2d', 'camera_canvas_3d');
+  cal_tools.setupLaserPreview('laser_canvas_2d', 'laser_canvas_3d');
   cal_tools.setupCameraDeleteButton('camera_image_delete', 'camera_images_list');
   cal_tools.setupLaserDeleteButton('laser_image_delete', 'laser_images_list');
   cal_tools.setupSelectAll('laser_image_select_all');
   cal_tools.setupSelectAll('camera_image_select_all');
+  cal_tools.setupShutdownButton('shutdown_button');
+  cal_tools.setupCameraFitButton('cam_fit');
+  cal_tools.setupLaserFitButton('lp_fit');
+  cal_tools.setupVectorControls('cam_rx', 'cam_ry', 'cam_rz', 'camera_rot');
+  cal_tools.setupVectorControls('cam_dx', 'cam_dy', 'cam_dz', 'camera_trans');
+  cal_tools.setupVectorControls('lp_rx', 'lp_ry', 'lp_rz', 'laser_rot');
+  cal_tools.setupVectorControls('lp_dx', 'lp_dy', 'lp_dz', 'laser_trans');
+  cal_tools.setup3DPreviewButton('lp_preview', 'laser');
+  cal_tools.setup3DPreviewButton('cam_preview', 'camera');
+  
 </script>
 {% endblock %}

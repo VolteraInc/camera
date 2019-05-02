@@ -8,6 +8,7 @@ import cv2
 from . import bp
 from volteracamera.analysis.undistort import Undistort
 from volteracamera.analysis.point_extractor import extract_feature_position
+from volteracamera.intrinsics.stage_calibration import calibrate_from_3d_points
 
 @bp.route('/camera_calibration', methods=["GET", "POST"])
 def camera_calibration():
@@ -62,3 +63,37 @@ def find_camera_position ():
     except:
         return jsonify ({"success": False, "message": "Could not parse the position from the filename.", "position":[]})
 
+@bp.route('/preview_camera_solution', methods=["POST"])
+def preview_camera_solution ():
+    """
+    Given the solution in the selection boxes, calculate the projected points positions, and return with the actual point positions.
+    The javascript viewer will be used to preview the solution and allow for manual refinement.
+    """
+    return jsonify ({'success': False, 'message': "Method not implemented."})
+
+@bp.route('/fit_camera', methods=['POST'])
+def fit_camera():
+    """
+    This method takes all the points and heights passed to it through json and begins the fitting process.
+    Eventualy this will be done in a second thread that allows us to query the status.
+    """
+    json_object = request.get_json()
+    print (json_object)
+    if "positions" not in json_object or "points" not in json_object or "calibration" not in json_object or "rvec" not in json_object or "tvec" not in json_object:
+        return jsonify ({'success': False, 'message':"Invalid request from client."})
+
+    position = [ point for point in json_object['positions'] ]
+    points_2d = [ point for point in json_object['points'] ]
+    guess_cal = json_object['calibration']    
+    rvec = json_object['rvec']
+    tvec = json_object['tvec']
+
+    print (position)
+    print (points_2d)
+    print (guess_cal)
+    print (rvec)
+    print(tvec)
+
+    undistort, _, _, rvec, tvec = calibrate_from_3d_points (position, points_2d, guess_cal["camera_matrix"], guess_cal["distortion"], rvec, tvec)
+
+    return jsonify({"success": True, "message":"", "calibration": undistort, "rvec":rvec, "tvec":tvec})

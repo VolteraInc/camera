@@ -118,6 +118,7 @@ nav ul li a, nav ul li span, header .action {
 
 .calibration_display {
   grid-area: display;
+  position: relative;
 }
 
 .laser_params {
@@ -200,4 +201,16 @@ ul li.selected_item {
 }
 
 .inline_checkbox {
+}
+
+.canvas_wrapper {
+  position:relative;
+  width: 100%;
+  height: 100%;
+}
+
+.cal_canvas_bottom, .cal_canvas_top {
+  position:absolute;
+  top: 0px;
+  left: 0px;
 }

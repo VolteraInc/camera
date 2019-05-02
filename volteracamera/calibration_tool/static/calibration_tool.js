@@ -9,6 +9,9 @@ function CalibrationTool() {
         parse_camera_position: "/api/parse_camera_position",
         laser_find_points: "/api/find_laser_points",
         parse_laser_height: "/api/parse_laser_height",
+        fit_laser: "/api/fit_laser",
+        fit_camera: "/api/fit_camera",
+        shutdown: "/shutdown",
     };
 
     let camera_calibration_object;
@@ -307,6 +310,54 @@ function CalibrationTool() {
             }
         }
     };
+
+    /**
+     * Returns the function that sets up and populates the 3d viewer.
+     * @param {laser or camera} which_type 
+     */
+    function setupUpdatePreviewView (which_type) {
+
+        async function handleUpdateCameraPreviewViewer() {
+            let items = Object.values(camera_calibration_images);
+            let points_3d_actual = [];
+            let points_2d_observed = [];
+            for (const item of items) {
+                if (item.point_valid && item.position_valid) {
+                    points_3d_actuals.push (item.position);
+                    points_2d_observed.push (item.point);
+                }
+            }
+            let response_json;
+            try {
+                let response = await fetch (requests.preview_camera_solution, {
+                    method: "POST",
+                    body: JSON.stringify(),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                response_json = await response.json();
+            } catch (e) {
+                console.log(e);
+                return;
+            }
+
+            if ( !response_json['success'] ) {
+                console.log (response_json['message'])
+                return;
+            }
+        }
+
+        function handleUpdateLaser3DViewer() {
+            laser_preview_controls.show3d();
+        }
+
+        if (which_type === "camera") {
+            return handleUpdateCameraPreviewViewer;
+        } else if (which_type === "laser") {
+            return handleUpdateLaser3DViewer;
+        }
+    }
 
     /**
      * returns the image updater for the camera or laser.
@@ -705,33 +756,63 @@ function CalibrationTool() {
 
     };
 
-    function setupCameraPreview(canvas_id) {
-        camera_preview_controls = setupDisplayCanvas(canvas_id);
+    function setupCameraPreview(canvas_id_2d, canvas_id_3d) {
+        camera_preview_controls = setupDisplayCanvas(canvas_id_2d, canvas_id_3d);
 
-        let canvas = document.getElementById(canvas_id);
-        let ctx = canvas.getContext("2d");
+        let canvas_2d = document.getElementById(canvas_id_2d);
+        let canvas_3d = document.getElementById(canvas_id_3d);
+        let ctx = canvas_2d.getContext("2d");
 
         camera_preview_controls.drawPoint = function (image_point) {
-            let x = image_point[0] / camera_preview_controls.image_width * canvas.width;
-            let y = image_point[1] / camera_preview_controls.image_height * canvas.height;
+            let x = image_point[0] / camera_preview_controls.image_width * canvas_2d.width;
+            let y = image_point[1] / camera_preview_controls.image_height * canvas_2d.height;
             ctx.beginPath();
             ctx.fillStyle = "green";
             ctx.arc(x, y, 4, 0, 2 * Math.PI);
             ctx.stroke();
             ctx.fill();
         };
+
+        camera_preview_controls.drawResidual = function (projected_3d_points, image_points) {
+            camera_preview_controls.clear();
+            if (projected_3d_points.length !== image_points.length) {
+                console.log ("Mismatch in point vectors. Can't draw residuals.");
+                return;
+            }
+            for (let i = 0; i < image_points.length; ++i) {
+                let xi = image_points[i][0] / laser_preview_controls.image_width * canvas_2d.width;
+                let yi = image_point[i][1] / laser_preview_controls.image_height * canvas_2d.height;
+                ctx.beginPath();
+                ctx.fillStyle = "green";
+                ctx.arc(xi, yi, 2, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.fill();
+                ctx.fillStyle = "red";
+                let xp = projected_3d_points[i][0] / laser_preview_controls.image_width * canvas_2d.width;
+                let yp = projected_3d_points[i][1] / laser_preview_controls.image_height * canvas_2d.height;
+                ctx.lineTo(xp, yp);
+                ctx.stroke();
+                ctx.fillStyle = "green";
+                ctx.arc(xp, yp, 2, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.fill();
+                ctx.closePath();
+            }
+
+        }
     };
 
-    function setupLaserPreview(canvas_id) {
-        laser_preview_controls = setupDisplayCanvas(canvas_id);
+    function setupLaserPreview(canvas_id_2d, canvas_id_3d) {
+        laser_preview_controls = setupDisplayCanvas(canvas_id_2d, canvas_id_3d);
 
-        let canvas = document.getElementById(canvas_id);
-        let ctx = canvas.getContext("2d");
+        let canvas_2d = document.getElementById(canvas_id_2d);
+        let canvas_3d = document.getElementById(canvas_id_3d);
+        let ctx = canvas_2d.getContext("2d");
 
         laser_preview_controls.drawPoints = function (image_points) {
             image_points.forEach(image_point => {
-                let x = image_point[0] / laser_preview_controls.image_width * canvas.width;
-                let y = image_point[1] / laser_preview_controls.image_height * canvas.height;
+                let x = image_point[0] / laser_preview_controls.image_width * canvas_2d.width;
+                let y = image_point[1] / laser_preview_controls.image_height * canvas_2d.height;
                 ctx.beginPath();
                 ctx.fillStyle = "green";
                 ctx.arc(x, y, 2, 0, 2 * Math.PI);
@@ -741,9 +822,10 @@ function CalibrationTool() {
         };
     }
 
-    function setupDisplayCanvas(canvas_id) {
+    function setupDisplayCanvas(canvas_2d_id, canvas_3d_id) {
 
-        let canvas = document.getElementById(canvas_id);
+        let canvas = document.getElementById(canvas_2d_id);
+        let canvas_3d = document.getElementById(canvas_3d_id);
         let ctx = canvas.getContext("2d");
         let image_width;
         let image_height;
@@ -758,24 +840,37 @@ function CalibrationTool() {
             let height = container.offsetHeight;
 
             canvas.width = width;
+            canvas_3d.width = width;
             //canvas.height = Math.round(width * aspect);
             canvas.height = height;
+            canvas_3d.height = height;
         };
 
         function clear() {
+            canvas.style.display = "block";
+            canvas_3d.style.display = "none";
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         };
 
         function drawImage(img) {
+            canvas.style.display = "block";
+            canvas_3d.style.display = "none";
             this.image_width = img.width;
             this.image_height = img.height.valueOf();
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         }
 
         function drawHeader(header_text) {
+            canvas.style.display = "block";
+            canvas_3d.style.display = "none";
             ctx.font = "20px Georgia";
             ctx.fillStyle = "black";
             ctx.fillText(header_text, 10, 30);
+        }
+
+        function show3d() {
+            canvas.style.display = "none";
+            canvas_3d.style.display = "block";
         }
 
         return {
@@ -785,6 +880,7 @@ function CalibrationTool() {
             drawHeader: drawHeader,
             image_width: image_width,
             image_height: image_height,
+            show3d: show3d,
         };
     }
 
@@ -831,6 +927,162 @@ function CalibrationTool() {
         }, false);
     }
 
+    /**
+     * Sets up shut down button that stops server.
+     * @param {*} shutdown_button_id 
+     */
+    function setupShutdownButton (shutdown_button_id){
+        document.getElementById(shutdown_button_id).addEventListener("click", ()=>{window.location.href = requests.shutdown});
+    }
+
+    /**
+     * setup the button that will intitialize the camera fitting.
+     * @param {string of the camera fit button id} camera_fit_button_id 
+     */
+    function setupCameraFitButton (camera_fit_button_id){
+        let button = document.getElementById(camera_fit_button_id);
+
+        async function handleCameraFit() {
+            let response;
+            let response_json;
+            button.disabled = true;
+            let positions = [];
+            let points = [];
+            const items = Object.values(camera_calibration_images);
+            for (const item of items) {
+                if (item.position_valid && item.point_valid) {
+                    positions.push(item.position);
+                    points.push(item.image_point);
+                }
+            }
+            try {
+                response = await fetch(requests.fit_camera, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        positions: positions,
+                        points: points,
+                        calibration: camera_calibration_object,
+                        rvec: rx_tx_controls['camera_rot'].getArray(),
+                        tvec: rx_tx_controls['camera_trans'].getArray(),
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                response_json = await response.json();
+            } catch (e) {
+                console.log(e);
+                button.disabled = false;
+                return
+            }
+            if (!response_json.success) {
+                console.log (response_json.message);
+                button.disabled = false;
+                return false;
+            }
+            button.disabled = false;
+            //Temporary output.
+            console.log(response_json);
+        }
+
+        button.addEventListener("click", handleCameraFit, false);
+    }
+
+    /**
+     * setup the button that will intitialize the Laser fitting.
+     * @param {string of the Laser fit button id} Laser_fit_button_id 
+     */
+    function setupLaserFitButton (laser_fit_button_id){
+        let button = document.getElementById(laser_fit_button_id);
+
+        async function handleLaserFit() {
+            button.disabled = true;
+            let response;
+            let response_json;
+            let heights = [];
+            let points = [];
+            const items = Object.values(laser_calibration_images);
+            for (const item of items) {
+                if (item.position_valid && item.points_valid) {
+                    heights.push(item.heights);
+                    points.push(item.points);
+                }
+            }
+            try {
+                response = await fetch(requests.fit_laser, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        heights: heights,
+                        points: points,
+                        camera_calibration: camera_calibration_object,
+                        laser_calibration: laser_calibration_object,
+                        rvec: rx_tx_controls['laser_rot'].getArray(),
+                        tvec: rx_tx_controls['laser_trans'].getArray(),
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                response_json = await response.json();
+            } catch (e) {
+                console.log(e);
+                button.disabled = false;
+                return
+            }
+            if (!response_json.success) {
+                console.log (response_json.message);
+                button.disabled = false;
+                return false;
+            }
+            button.disabled = false;
+            //temporary output
+            console.log(response_json)
+        }
+
+        button.addEventListener("click", handleLaserFit, false);
+    }
+
+    /**
+     * Set up the handlers for retrieving and setting vectors.
+     * @param {x element} x_id 
+     * @param {y element} y_id 
+     * @param {z element} z_id 
+     * @param {laser or camera, tx or rx} system 
+     */
+    let rx_tx_controls = {}
+    function setupVectorControls(x_id, y_id, z_id, system) {
+        let x_elem = document.getElementById(x_id);
+        let y_elem = document.getElementById(y_id);
+        let z_elem = document.getElementById(z_id);
+
+        rx_tx_controls[system] = {
+            getX: ()=>{return x_elem.value},
+            getY: ()=>{return y_elem.value},
+            getZ: ()=>{return z_elem.value},
+            setX: (x)=>{x_elem.value = x;},
+            setY: (y)=>{y_elem.value = y;},
+            setZ: (z)=>{z_elem.value = z;},
+            getArray: ()=>{return [x_elem.value, y_elem.value, z_elem.value];},
+            setArray: (vec)=>{
+                x_elem.value = vec[0];
+                y_elem.value = vec[1];
+                z_elem.value = vec[2];
+            },
+        }
+    }
+
+    /**
+     * setup the 3d preview button for camera images.
+     */
+    function setup3DPreviewButton(update_button_id, tab_id) {
+        let button = document.getElementById(update_button_id);
+        let update3DView = setupUpdate3DView(tab_id)
+        button.addEventListener("click", ()=>{
+            update3DView();
+        }, false);
+    }
+
+
     return {
         setupTabs: setupTabs,
         setupMultipleFilesSelect: setupMultipleFilesSelect,
@@ -844,6 +1096,11 @@ function CalibrationTool() {
         setupCameraDeleteButton: setupCameraDeleteButton,
         setupLaserDeleteButton: setupLaserDeleteButton,
         setupSelectAll: setupSelectAll,
+        setupShutdownButton: setupShutdownButton,
+        setupCameraFitButton: setupCameraFitButton,
+        setupLaserFitButton: setupLaserFitButton,
+        setupVectorControls: setupVectorControls,
+        setup3DPreviewButton: setup3DPreviewButton,
     };
 
 };

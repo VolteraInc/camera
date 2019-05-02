@@ -65,3 +65,30 @@ def find_laser_position ():
         return jsonify ({"success": False, "message": "Could not parse the height from the filename", "height":0})
 
 
+@bp.route('/preview_laser_solution', methods=["POST"])
+def preview_laser_solution ():
+    """
+    Given the solution in the selection boxes, calculate the projected points positions, and return with the actual point positions.
+    The javascript viewer will be used to preview the solution and allow for manual refinement.
+    """
+    return jsonify ({'success': False, 'message': "Method not implemented."})
+
+
+@bp.route('/fit_laser', methods=['POST'])
+def fit_laser():
+    """
+    This method takes all the points and heights passed to it through json and begins the fitting process.
+    Eventualy this will be done in a second thread that allows us to query the status.
+    """
+    json_object = request.get_json()
+    if "heights" not in json_object or "points" not in json_object or "camera_calibration" not in json_object or 'laser_calibration' not in json_object or "rvec" not in json_object or "tvec" not in json_object:
+        return jsonify ({'success': False, 'message':"Invalid request from client."})
+
+    position = [ point for point in json_object['heights'] ]
+    points_2d = [ point for point in json_object['points'] ]
+    camera_cal = json_object['camera_calibration']    
+    guess_laser_cal = json_object['laser_calibration']
+    rvec = json_object['rvec']
+    tvec = json_object['tvec']
+
+    return ({"success": False, "message":"Not Implemented"})
