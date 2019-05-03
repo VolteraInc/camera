@@ -93,7 +93,9 @@ class Undistort (object):
         Given an image point, undistort and project it.
         """
         points_undistorted = self.undistort_points(points_2d)
-        return self._project_points(points_undistorted)
+        #return self._project_points(points_undistorted)
+        points_undistorted = [[point[0][0], point[0][1], 1.0] for point in points_undistorted]
+        return points_undistorted
 
     def write_file(self, filename):
         """

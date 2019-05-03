@@ -65,7 +65,7 @@ def find_laser_position ():
         return jsonify ({"success": False, "message": "Could not parse the height from the filename", "height":0})
 
 
-@bp.route('/preview_laser_solution', methods=["POST"])
+@bp.route('/preview_camera_solution', methods=["POST"])
 def preview_laser_solution ():
     """
     Given the solution in the selection boxes, calculate the projected points positions, and return with the actual point positions.

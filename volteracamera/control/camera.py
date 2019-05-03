@@ -166,7 +166,12 @@ class Camera(threading.Thread):
         """
         if picam_found:
             with self.frame_mutex:
-                frame = self.frame.copy()
+                while (True):
+                    try:
+                        frame = self.frame.copy()
+                        break
+                    except AttributeError:
+                        print ("Could not grab image frame.")
             return frame
         else:
             frame = Image.new(mode="RGB", size=(RESOLUTION))

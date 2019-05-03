@@ -23,7 +23,7 @@ FILTER_SMOOTH = (np.zeros(KERNEL) + 1.0)/KERNEL
 FILTER_SHARPEN = (np.zeros(KERNEL) - 1.0)
 FILTER_SHARPEN[int(KERNEL/2)] = KERNEL 
 INTERVAL = 1
-PROFILE_OFFSET = 0.0000001 #move each profile over by 0.1 um in the y direction.
+PROFILE_OFFSET = 0.0001 #move each profile over by 0.1 mm in the y direction.
 
 
 def reject_outlier (data, m = 2, image_edge_threshold=200):
