@@ -8,7 +8,7 @@ run:
 run_calibration:
 	FLASK_APP=volteracamera.calibration_tool \
 	FLASK_DEBUG=1 \
-	flask run --port 5000
+	flask run 
 
 update-requirements:
 	pip freeze > Requirements.txt

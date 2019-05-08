@@ -82,18 +82,26 @@ def fit_camera():
     if "positions" not in json_object or "points" not in json_object or "calibration" not in json_object or "rvec" not in json_object or "tvec" not in json_object:
         return jsonify ({'success': False, 'message':"Invalid request from client."})
 
-    position = [ point for point in json_object['positions'] ]
+    positions = [ [point[0], -point[1], point[2]] for point in json_object['positions'] ]
     points_2d = [ point for point in json_object['points'] ]
     guess_cal = json_object['calibration']    
     rvec = json_object['rvec']
     tvec = json_object['tvec']
 
-    print (position)
-    print (points_2d)
-    print (guess_cal)
-    print (rvec)
-    print(tvec)
+    #print (positions)
+    #print (points_2d)
+    #print (guess_cal)
+    #print (rvec)
+    #print(tvec)
+    with open("IntrinsicsPoints.csv", "w") as fid:
+        for pos_2d, pos_3d in zip (points_2d, positions):
+            fid.write(f"{pos_2d[0]}, {pos_2d[1]}, {pos_3d[0]}, {pos_3d[1]}, {pos_3d[2]}\n")
 
-    undistort, _, _, rvec, tvec = calibrate_from_3d_points (position, points_2d, guess_cal["camera_matrix"], guess_cal["distortion"], rvec, tvec)
+    print ("Starting Fit...")
 
-    return jsonify({"success": True, "message":"", "calibration": undistort, "rvec":rvec, "tvec":tvec})
+    #undistort, _, _, rvec, tvec = calibrate_from_3d_points (position, points_2d, guess_cal["camera_matrix"], guess_cal["distortion"])#, rvec, tvec)
+
+    print ("Finished Fit...")
+
+    #return jsonify({"success": True, "message":"", "calibration": undistort, "rvec":rvec, "tvec":tvec})
+    return jsonify({"success": True, "message":"", "calibration": Undistort(np.asarray(guess_cal["camera_matrix"]), np.asarray(guess_cal["distortion"])), "rvec":rvec, "tvec":tvec})

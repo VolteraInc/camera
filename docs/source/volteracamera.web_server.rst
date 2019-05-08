@@ -1,6 +1,13 @@
 volteracamera.web\_server package
 =================================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    volteracamera.web_server.api
+
 Submodules
 ----------
 
