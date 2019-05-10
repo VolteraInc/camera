@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8 )
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0 )
 PROJECT(VolteraCalibrationFitting)
 
 set (CMAKE_CXX_STANDARD 14)
@@ -16,7 +16,7 @@ SET ( SRC_DIR "${PROJECT_SOURCE_DIR}/src" )
 SET ( TEST_SRC_DIR "${PROJECT_SOURCE_DIR}/test" )
 SET ( INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
-set(SRC
+set(LIBRARY_SRC_FILES
   "${SRC_DIR}/LoadCSV.cpp"
 )
 
@@ -28,12 +28,19 @@ set(INTRINSICS_MAIN_SRC
   "${SRC_DIR}/intrinsics_fitting_main.cpp"
 )
 
+SET (TEST_DATA_DIR "${TEST_SRC_DIR}/test_data/")
+CONFIGURE_FILE ("${TEST_SRC_DIR}/test_path.h.in" "${TEST_SRC_DIR}/test_path.h")
 set(TEST_SRC
   "${TEST_SRC_DIR}/testLoadCSV.cpp"
 )
 
+#External Libraries
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+find_package (Ceres REQUIRED)
+
 #Set up library and executables
 ADD_LIBRARY(${LIB_NAME} ${LIBRARY_SRC_FILES} ${HEADERS})
+TARGET_LINK_LIBRARIES (${LIB_NAME} Eigen3::Eigen ${CERES_LIBRARIES})
 
 ADD_EXECUTABLE ( ${INTRINSICS_MAIN_NAME} ${INTRINSICS_MAIN_SRC})
 TARGET_LINK_LIBRARIES ( ${INTRINSICS_MAIN_NAME} ${LIB_NAME})
@@ -44,6 +51,7 @@ add_test(NAME ${TEST_NAME} COMMAND "${TEST_PATH}/${TEST_NAME}")
 
 INCLUDE_DIRECTORIES(
   include
+  ${CERES_INCLUDE_DIRS}
 )
 
 #Set up gtest
