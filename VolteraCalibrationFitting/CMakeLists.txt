@@ -18,10 +18,15 @@ SET ( INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
 set(LIBRARY_SRC_FILES
   "${SRC_DIR}/LoadCSV.cpp"
+  "${SRC_DIR}/Intrinsics.cpp"
+  "${SRC_DIR}/PreviewResiduals.cpp"
 )
 
 set (HEADERS
   "${INCLUDE_DIR}/VolteraCalibrationFitting/LoadCSV.h"
+  "${INCLUDE_DIR}/VolteraCalibrationFitting/ReprojectionError.h"
+  "${INCLUDE_DIR}/VolteraCalibrationFitting/Intrinsics.h"
+  "${INCLUDE_DIR}/VolteraCalibrationFitting/PreviewResiduals.h"
 )
 
 set(INTRINSICS_MAIN_SRC
@@ -37,10 +42,14 @@ set(TEST_SRC
 #External Libraries
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package (Ceres REQUIRED)
+include_directories(${CERES_INCLUDE_DIRS})
+find_package (OpenCV 3.2 REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES( include )
 
 #Set up library and executables
 ADD_LIBRARY(${LIB_NAME} ${LIBRARY_SRC_FILES} ${HEADERS})
-TARGET_LINK_LIBRARIES (${LIB_NAME} Eigen3::Eigen ${CERES_LIBRARIES})
+TARGET_LINK_LIBRARIES (${LIB_NAME} Eigen3::Eigen ${CERES_LIBRARIES} ${OpenCV_LIBS})
 
 ADD_EXECUTABLE ( ${INTRINSICS_MAIN_NAME} ${INTRINSICS_MAIN_SRC})
 TARGET_LINK_LIBRARIES ( ${INTRINSICS_MAIN_NAME} ${LIB_NAME})
@@ -49,10 +58,6 @@ ADD_EXECUTABLE(${TEST_NAME} ${TEST_SRC})
 target_link_libraries(${TEST_NAME} ${LIB_NAME} gtest_main)
 add_test(NAME ${TEST_NAME} COMMAND "${TEST_PATH}/${TEST_NAME}")
 
-INCLUDE_DIRECTORIES(
-  include
-  ${CERES_INCLUDE_DIRS}
-)
 
 #Set up gtest
 if ( NOT TARGET gtest )
@@ -65,12 +70,12 @@ EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
 IF(result)
   MESSAGE(FATAL_ERROR "CMake step for googletest failed: ${result}")
 ENDIF()
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/googletest-download )
-IF(result)
-  MESSAGE(FATAL_ERROR "Build step for googletest failed: ${result}")
-ENDIF()
+#EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
+#  RESULT_VARIABLE result
+#  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/googletest-download )
+#IF(result)
+#  MESSAGE(FATAL_ERROR "Build step for googletest failed: ${result}")
+#ENDIF()
 
 # Prevent overriding the parent project's compiler/linker
 # settings on Windows
