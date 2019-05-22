@@ -20,6 +20,7 @@ set(LIBRARY_SRC_FILES
   "${SRC_DIR}/LoadCSV.cpp"
   "${SRC_DIR}/Intrinsics.cpp"
   "${SRC_DIR}/PreviewResiduals.cpp"
+  "${SRC_DIR}/LaserExtrinsics.cpp"
 )
 
 set (HEADERS
@@ -27,6 +28,8 @@ set (HEADERS
   "${INCLUDE_DIR}/VolteraCalibrationFitting/ReprojectionError.h"
   "${INCLUDE_DIR}/VolteraCalibrationFitting/Intrinsics.h"
   "${INCLUDE_DIR}/VolteraCalibrationFitting/PreviewResiduals.h"
+  "${INCLUDE_DIR}/VolteraCalibrationFitting/LaserExtrinsics.h"
+  "${INCLUDE_DIR}/VolteraCalibrationFitting/LaserReprojectionError.h"
 )
 
 set(INTRINSICS_MAIN_SRC

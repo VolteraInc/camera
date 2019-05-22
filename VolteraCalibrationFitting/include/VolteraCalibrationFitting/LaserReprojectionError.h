@@ -15,15 +15,80 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
+#include <opencv2/opencv.hpp>
+
 #include <vector>
 
 namespace voltera {
 
 struct LaserReprojectionError {
-  ReprojectionError(double observed_i, double observed_j, double height,
-                    const double *camera_matrix, const double *distortion,
-                    const double *extrinsics)
-      : m_i(observed_i), m_j(observed_j), m_height(height){};
+  LaserReprojectionError(double observed_i, double observed_j, double height,
+                         const double *camera_matrix, const double *distortion,
+                         const double *initial_position)
+      : m_int_x(0.0), m_int_y(0.0), m_int_z(0.0), is_valid(true) {
+
+    // initial_position[0,1,2] are the angle-axis rotation.
+    double temp_plane_point[Point3D::SIZE_POINT3D]{0.0, 0.0, height};
+    double temp_plane_normal[Point3D::SIZE_POINT3D]{0.0, 0.0, -1.0};
+
+    double plane_point[Point3D::SIZE_POINT3D]{0.0, 0.0, 0.0};
+    double plane_normal[Point3D::SIZE_POINT3D]{0.0, 0.0, 0.0};
+
+    /*****
+     * Transform the plane from world co-ords to cam co-ords with the initial
+     * position.
+     */
+    ceres::AngleAxisRotatePoint(initial_position, temp_plane_point,
+                                plane_point);
+    ceres::AngleAxisRotatePoint(initial_position, temp_plane_normal,
+                                plane_normal);
+
+    double d(-(plane_normal[Point3D::X] * plane_point[Point3D::X] +
+               plane_normal[Point3D::Y] * plane_point[Point3D::Y] +
+               plane_normal[Point3D::Z] * plane_point[Point3D::Z]));
+
+    // initial_position[3,4,5] are the translation.
+    plane_point[Point3D::X] += initial_position[Extrinsics::X_OFF];
+    plane_point[Point3D::Y] += initial_position[Extrinsics::Y_OFF];
+    plane_point[Point3D::Z] += initial_position[Extrinsics::Z_OFF];
+
+    // Undistort the 2d sensor point so it can be projected onto the plane.
+    double fx = camera_matrix[CamMatrix::FX];
+    double fy = camera_matrix[CamMatrix::FY];
+    double cx = camera_matrix[CamMatrix::CX];
+    double cy = camera_matrix[CamMatrix::CY];
+    double k1 = distortion[Distortion::K1];
+    double k2 = distortion[Distortion::K2];
+    double p1 = distortion[Distortion::P1];
+    double p2 = distortion[Distortion::P2];
+    double k3 = distortion[Distortion::K3];
+
+    cv::Point2d sensor_point(observed_i, observed_j);
+    cv::Point2d out_point(0.0, 0.0);
+
+    // Project point onto expected plane.
+    cv::Mat cam_matrix =
+        (cv::Mat_<double>(3, 3) << fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0);
+    cv::Mat dist = (cv::Mat_<double>(5, 1) << k1, k2, p1, p2, k3);
+    cv::undistortPoints(sensor_point, out_point, cam_matrix, dist,
+                        cv::noArray(), cam_matrix);
+
+    double denom = plane_normal[Point3D::X] * out_point.x +
+                   plane_normal[Point3D::Y] * out_point.y +
+                   plane_normal[Point3D::Z] * 1.0;
+
+    // CHECK denominator != 0
+    if (std::abs(denom) < 0.0000001) {
+      is_valid = false;
+      return;
+    }
+
+    double t = -d / denom;
+
+    m_int_x = t * out_point.x;
+    m_int_y = t * out_point.y;
+    m_int_z = t * 1.0;
+  };
 
   // array indexes for a 3D point.
   enum Point3D : int { X, Y, Z, SIZE_POINT3D };
@@ -45,77 +110,62 @@ struct LaserReprojectionError {
   // array indexes of the distortion
   enum Distortion : int { K1, K2, P1, P2, K3, SIZE_DISTORTION };
 
+  // array indexes of the laser plane
+  enum LaserPlane : int { RX, RY, RZ, HEIGHT, SIZE_LASER_PLANE };
+
   // array indexes of residuals
   enum Residual : int { SIZE_RESIDUAL };
 
   template <typename T>
-  bool operator()(const T *const laser_plane, T *residuals) const {
-    // initial_position[0,1,2] are the angle-axis rotation.
-    T plane_point[Point3D::SIZE_POINT3D];
-    T plane_normal[Point3D::SIZE_POINT3D];
-    T target_plane_point[Point3D::SIZE_POINT3D]{
-        static_cast<T>(0), static_cast<T>(0), static_cast<T>(m_height)};
-    T target_plane_normal[Point3D::SIZE_POINT3D]{
-        static_cast<T>(0), static_cast<T>(0), static_cast<T>(-1.0)};
+  bool operator()(const T *const laser_plane, T *residual) const {
+    /**
+     * Generate the laser plane.
+     */
+    T temp_laser_plane_normal[SIZE_POINT3D]{
+        static_cast<T>(0), static_cast<T>(0), static_cast<T>(-1)};
+    T laser_plane_normal[SIZE_POINT3D]{static_cast<T>(0), static_cast<T>(0),
+                                       static_cast<T>(0)};
+    T laser_plane_point[SIZE_POINT3D]{static_cast<T>(0), static_cast<T>(0),
+                                      static_cast<T>(laser_plane[HEIGHT])};
 
-    ceres::AngleAxisRotatePoint(initial_position, target_plane_normal,
-                                plane_point);
-    ceres::AngleAxisRotatePoint(initial_position, target_plane_normal,
-                                plane_normal);
-    // initial_position[3,4,5] are the translation.
-    plane_point[Point3D::X] += initial_position[Extrinsics::X_OFF];
-    plane_point[Point3D::Y] += initial_position[Extrinsics::Y_OFF];
-    plane_point[Point3D::Z] += initial_position[Extrinsics::Z_OFF];
+    ceres::AngleAxisRotatePoint(laser_plane, temp_laser_plane_normal,
+                                laser_plane_normal);
 
-    // Project the 3d point now relative to the camera onto the sensor
-    const T fx = camera_matrix[CamMatrix::FX];
-    const T fy = camera_matrix[CamMatrix::FY];
-    const T cx = camera_matrix[CamMatrix::CX];
-    const T cy = camera_matrix[CamMatrix::CY];
+    T d(-(laser_plane_normal[Point3D::Z] * laser_plane_point[Point3D::Z]));
 
-    const T k1 = distortion[Distortion::K1];
-    const T k2 = distortion[Distortion::K2];
-    const T p1 = distortion[Distortion::P1];
-    const T p2 = distortion[Distortion::P2];
-    const T k3 = distortion[Distortion::K3];
+    *residual = laser_plane_normal[Point3D::X] * m_int_x +
+                laser_plane_normal[Point3D::Y] * m_int_y +
+                laser_plane_normal[Point3D::Z] * m_int_z +
+                d; // Point plane distance.
 
-    // taken from
-    // https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html
-    // Convert to homogeneous co-orodinates
-    T xp(p[Point3D::X] / p[Point3D::Z]);
-    T yp(p[Point3D::Y] / p[Point3D::Z]);
-
-    // Undistort the points (radtan)
-    T r2(xp * xp + yp * yp);
-
-    T radial_coeff(1.0 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2);
-    T xpp(xp * radial_coeff + 2.0 * p1 * xp * yp + p2 * (r2 + 2.0 * xp * xp));
-    T ypp(yp * radial_coeff + p1 * (r2 + 2.0 * yp * yp) + 2.0 * p2 * xp * yp);
-
-    // project the points.
-    T out_point[Residual::SIZE_RESIDUAL]{fx * xpp + cx, fy * ypp + cy};
-
-    residuals[Residual::XR] = m_observed_x - out_point[Residual::XR];
-    residuals[Residual::YR] = m_observed_y - out_point[Residual::YR];
     return true;
   }
 
   // Factory to hide the construction of the CostFunction object from
-  // the client code.
+  // the client code. Returns null pointer is the inputs are invalid
   static ceres::CostFunction *Create(const double observed_i, double observed_j,
                                      double height, const double *camera_matrix,
                                      const double *distortion,
                                      const double *initial_position) {
-    return (new ceres::AutoDiffCostFunction<ReprojectionError, SIZE_RESIDUAL,
-                                            SIZE_LASER_PLANE>(
-        new ReprojectionError(observed_i, observed_j, height, camera_matrix,
-                              distortion, initial_postion)));
+    LaserReprojectionError *reprojector(new LaserReprojectionError(
+        observed_i, observed_j, height, camera_matrix, distortion,
+        initial_position));
+    if (reprojector->is_valid) {
+      return new ceres::AutoDiffCostFunction<LaserReprojectionError,
+                                             SIZE_RESIDUAL, SIZE_LASER_PLANE>(
+          reprojector);
+    } else {
+      delete reprojector;
+      return nullptr;
+    }
   }
 
-  double m_observed_x;
-  double m_observed_y;
-  double m_stage[Point3D::SIZE_POINT3D];
-};
+  double m_int_x;
+  double m_int_y;
+  double m_int_z;
+
+  bool is_valid;
+}; // namespace voltera
 
 } // namespace voltera
 
