@@ -63,8 +63,8 @@ struct LaserReprojectionError {
     double p2 = distortion[Distortion::P2];
     double k3 = distortion[Distortion::K3];
 
-    cv::Point2d sensor_point(observed_i, observed_j);
-    cv::Point2d out_point(0.0, 0.0);
+    cv::Mat sensor_point = (cv::Mat_<double>(2, 1) << observed_i, observed_j);
+    cv::Mat out_point = (cv::Mat_<double>(2, 1) << 0.0, 0.0);
 
     // Project point onto expected plane.
     cv::Mat cam_matrix =
@@ -73,8 +73,8 @@ struct LaserReprojectionError {
     cv::undistortPoints(sensor_point, out_point, cam_matrix, dist,
                         cv::noArray(), cam_matrix);
 
-    double denom = plane_normal[Point3D::X] * out_point.x +
-                   plane_normal[Point3D::Y] * out_point.y +
+    double denom = plane_normal[Point3D::X] * out_point.at<double>(0) +
+                   plane_normal[Point3D::Y] * out_point.at<double>(1) +
                    plane_normal[Point3D::Z] * 1.0;
 
     // CHECK denominator != 0
@@ -85,8 +85,8 @@ struct LaserReprojectionError {
 
     double t = -d / denom;
 
-    m_int_x = t * out_point.x;
-    m_int_y = t * out_point.y;
+    m_int_x = t * out_point.at<double>(0);
+    m_int_y = t * out_point.at<double>(1);
     m_int_z = t * 1.0;
   };
 
@@ -114,7 +114,7 @@ struct LaserReprojectionError {
   enum LaserPlane : int { RX, RY, RZ, HEIGHT, SIZE_LASER_PLANE };
 
   // array indexes of residuals
-  enum Residual : int { SIZE_RESIDUAL };
+  enum Residual : int { RES_X, SIZE_RESIDUAL };
 
   template <typename T>
   bool operator()(const T *const laser_plane, T *residual) const {
@@ -133,10 +133,10 @@ struct LaserReprojectionError {
 
     T d(-(laser_plane_normal[Point3D::Z] * laser_plane_point[Point3D::Z]));
 
-    *residual = laser_plane_normal[Point3D::X] * m_int_x +
-                laser_plane_normal[Point3D::Y] * m_int_y +
-                laser_plane_normal[Point3D::Z] * m_int_z +
-                d; // Point plane distance.
+    residual[Residual::RES_X] = laser_plane_normal[Point3D::X] * m_int_x +
+                                laser_plane_normal[Point3D::Y] * m_int_y +
+                                laser_plane_normal[Point3D::Z] * m_int_z +
+                                d; // Point plane distance.
 
     return true;
   }
