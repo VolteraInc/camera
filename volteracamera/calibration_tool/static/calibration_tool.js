@@ -101,7 +101,7 @@ function CalibrationTool() {
             try {
                 URL.revokeObjectURL(camera_calibration_image.url);
                 URL.revokeObjectURL(camera_calibration_image.img.src);
-            } catch (e){
+            } catch (e) {
 
             }
 
@@ -315,7 +315,7 @@ function CalibrationTool() {
      * Returns the function that sets up and populates the 3d viewer.
      * @param {laser or camera} which_type 
      */
-    function setupUpdatePreviewView (which_type) {
+    function setupUpdatePreviewView(which_type) {
 
         async function handleUpdateCameraPreviewViewer() {
             let items = Object.values(camera_calibration_images);
@@ -323,13 +323,13 @@ function CalibrationTool() {
             let points_2d_observed = [];
             for (const item of items) {
                 if (item.point_valid && item.position_valid) {
-                    points_3d_actuals.push (item.position);
-                    points_2d_observed.push (item.point);
+                    points_3d_actuals.push(item.position);
+                    points_2d_observed.push(item.point);
                 }
             }
             let response_json;
             try {
-                let response = await fetch (requests.preview_camera_solution, {
+                let response = await fetch(requests.preview_camera_solution, {
                     method: "POST",
                     body: JSON.stringify(),
                     headers: {
@@ -342,8 +342,8 @@ function CalibrationTool() {
                 return;
             }
 
-            if ( !response_json['success'] ) {
-                console.log (response_json['message'])
+            if (!response_json['success']) {
+                console.log(response_json['message'])
                 return;
             }
         }
@@ -429,7 +429,7 @@ function CalibrationTool() {
                 console.log("No element with key " + key + " in " + type_string + " images");
                 return;
             }
-            iterateList((item)=>{
+            iterateList((item) => {
                 item.classList.remove("selected_item")
             });
             document.getElementById(item.id).classList.add("selected_item");
@@ -443,10 +443,10 @@ function CalibrationTool() {
      * Handle the up down key presses.
      * @param {event} evt 
      */
-    function handleKeyPress (evt) {
+    function handleKeyPress(evt) {
         let selected_values = Array.from(document.getElementsByClassName("selected_item"));
         let tab_type = getCurrentTab();
-        selected_values = selected_values.filter((item)=>item.id.includes(tab_type));
+        selected_values = selected_values.filter((item) => item.id.includes(tab_type));
         //filter by laser or camera
         if (evt.code === "ArrowDown") {
             if (selected_values.length !== 0) { //items are already selected
@@ -485,7 +485,7 @@ function CalibrationTool() {
                     setupUpdateImage(tab_type)(image);
                 }
             }
-}
+        }
     }
 
     /**
@@ -776,7 +776,7 @@ function CalibrationTool() {
         camera_preview_controls.drawResidual = function (projected_3d_points, image_points) {
             camera_preview_controls.clear();
             if (projected_3d_points.length !== image_points.length) {
-                console.log ("Mismatch in point vectors. Can't draw residuals.");
+                console.log("Mismatch in point vectors. Can't draw residuals.");
                 return;
             }
             for (let i = 0; i < image_points.length; ++i) {
@@ -931,15 +931,15 @@ function CalibrationTool() {
      * Sets up shut down button that stops server.
      * @param {*} shutdown_button_id 
      */
-    function setupShutdownButton (shutdown_button_id){
-        document.getElementById(shutdown_button_id).addEventListener("click", ()=>{window.location.href = requests.shutdown});
+    function setupShutdownButton(shutdown_button_id) {
+        document.getElementById(shutdown_button_id).addEventListener("click", () => { window.location.href = requests.shutdown });
     }
 
     /**
      * setup the button that will intitialize the camera fitting.
      * @param {string of the camera fit button id} camera_fit_button_id 
      */
-    function setupCameraFitButton (camera_fit_button_id){
+    function setupCameraFitButton(camera_fit_button_id) {
         let button = document.getElementById(camera_fit_button_id);
 
         async function handleCameraFit() {
@@ -976,7 +976,7 @@ function CalibrationTool() {
                 return
             }
             if (!response_json.success) {
-                console.log (response_json.message);
+                console.log(response_json.message);
                 button.disabled = false;
                 return false;
             }
@@ -992,7 +992,7 @@ function CalibrationTool() {
      * setup the button that will intitialize the Laser fitting.
      * @param {string of the Laser fit button id} Laser_fit_button_id 
      */
-    function setupLaserFitButton (laser_fit_button_id){
+    function setupLaserFitButton(laser_fit_button_id) {
         let button = document.getElementById(laser_fit_button_id);
 
         async function handleLaserFit() {
@@ -1004,8 +1004,8 @@ function CalibrationTool() {
             const items = Object.values(laser_calibration_images);
             for (const item of items) {
                 if (item.position_valid && item.points_valid) {
-                    heights.push(item.heights);
-                    points.push(item.points);
+                    heights.push(item.position[2]);
+                    points.push(item.laser_points);
                 }
             }
             try {
@@ -1030,7 +1030,7 @@ function CalibrationTool() {
                 return
             }
             if (!response_json.success) {
-                console.log (response_json.message);
+                console.log(response_json.message);
                 button.disabled = false;
                 return false;
             }
@@ -1056,14 +1056,14 @@ function CalibrationTool() {
         let z_elem = document.getElementById(z_id);
 
         rx_tx_controls[system] = {
-            getX: ()=>{return x_elem.value},
-            getY: ()=>{return y_elem.value},
-            getZ: ()=>{return z_elem.value},
-            setX: (x)=>{x_elem.value = x;},
-            setY: (y)=>{y_elem.value = y;},
-            setZ: (z)=>{z_elem.value = z;},
-            getArray: ()=>{return [x_elem.value, y_elem.value, z_elem.value];},
-            setArray: (vec)=>{
+            getX: () => { return x_elem.value },
+            getY: () => { return y_elem.value },
+            getZ: () => { return z_elem.value },
+            setX: (x) => { x_elem.value = x; },
+            setY: (y) => { y_elem.value = y; },
+            setZ: (z) => { z_elem.value = z; },
+            getArray: () => { return [x_elem.value, y_elem.value, z_elem.value]; },
+            setArray: (vec) => {
                 x_elem.value = vec[0];
                 y_elem.value = vec[1];
                 z_elem.value = vec[2];
@@ -1076,8 +1076,8 @@ function CalibrationTool() {
      */
     function setup3DPreviewButton(update_button_id, tab_id) {
         let button = document.getElementById(update_button_id);
-        let update3DView = setupUpdate3DView(tab_id)
-        button.addEventListener("click", ()=>{
+        let update3DView = setupUpdatePreviewView(tab_id); //slightly suspect.
+        button.addEventListener("click", () => {
             update3DView();
         }, false);
     }

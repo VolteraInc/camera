@@ -219,14 +219,7 @@ class LaserProcessingServer (threading.Thread):
                         logging.debug ("Captured Image : {}".format(image_count))
                         image_points = finder.process(image[:,:,0]) 
                         image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
-
                         intensities = [ image[int(ind[0][1]), int(ind[0][0]), 2] for ind in image_points_full ]
-
-                        #REMOVE THIS LINE WHEN CAMERA CAL FIXED - 21 May 2019
-                        ###############################################
-                        image_points_full = [[[point[0][0], (point[0][1] - 2464/2) * 2 + 2464/2  ]] for point in image_points]
-                        ##########################################
-
                         data_points = self.point_projector.project (image_points_full)
 
                         logging.debug("{} were found and are being transferred for display.".format (len(data_points)))

@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
   std::string output_file("out.json");
   std::string parameter_file;
   bool calibrate_laser(false);
+  std::string laser_input_file;
   std::vector<std::vector<double>> parameters;
 
   auto parse_result = parse(argc, argv);
@@ -40,6 +41,7 @@ int main(int argc, char *argv[]) {
   }
   if (parse_result.count("laser")) {
     calibrate_laser = true;
+    laser_input_file = parse_result["laser"].as<std::string>();
   }
 
   parameters = {std::vector<double>({6325, 6325, 1640, 1232}),
@@ -77,28 +79,7 @@ int main(int argc, char *argv[]) {
       stage_rotation[0], stage_rotation[1], stage_rotation[2],
       stage_offset[0],   stage_offset[1],   stage_offset[2]};
 
-  // Get rough initial position
-  // std::cout << "-------------------------------\nInitial Extrinsics"
-  //          << std::endl;
   voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
-  // voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, true,
-  // false);
-  // Refine camera parameters
-  // std::cout << "-------------------------------\nInitial Intrsinsics"
-  // << std::endl;
-  // voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, false,
-  // true);
-  // Repeat
-  // std::cout << "-------------------------------\nRefine Extrinsics"
-  //          << std::endl;
-  // voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, true,
-  // false);
-  // Refine camera parameters
-  // std::cout << "-------------------------------\nRefine Intrinsics"
-  //         << std::endl;
-  // voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, false,
-  // true);
-  // total refinement
   std::cout << "-------------------------------\nTotal Refinement" << std::endl;
   voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, false,
                          false);

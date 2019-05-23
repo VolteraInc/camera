@@ -18,18 +18,19 @@ def laser_calibration():
     if request.method == "GET":
         if 'laser_plane' not in session:
             session['laser_plane'] = Plane()
-        return jsonify (session['laser_plane'])
+        return jsonify(session['laser_plane'])
     else:
         json_object = request.get_json()
         if "__plane__" in json_object and json_object['__plane__']:
             session['laser_plane'] = json_object
-        return jsonify ({"success": True})
+        return jsonify({"success": True})
+
 
 @bp.route('/find_laser_points', methods=["POST"])
 def find_laser_points():
     json_object = request.get_json()
     if "image_data" not in json_object:
-        return jsonify ({"success": False, "message":"No image data in request.", "points":[]})
+        return jsonify({"success": False, "message": "No image data in request.", "points": []})
 
     image_string = json_object["image_data"]
     image_string = image_string[image_string.find(',')+1:]
@@ -41,18 +42,19 @@ def find_laser_points():
     with LaserLineFinder() as finder:
         points = finder.process(image_gray)
     points = reject_outlier(np.asarray(points))
-    points = [ [x, y] for x, y in enumerate(points) ]
-    
-    return jsonify({"success": True, "message":"", "points": points})
+    points = [[x, y] for x, y in enumerate(points)]
+
+    return jsonify({"success": True, "message": "", "points": points})
+
 
 @bp.route('/parse_laser_height', methods=["POST"])
-def find_laser_position ():
+def find_laser_position():
     """
     Parse the image filename and return the position.
     """
     json_object = request.get_json()
     if "filename" not in json_object:
-        return jsonify ({"success": False, "message": "No filename with height sent.", "position":[]})
+        return jsonify({"success": False, "message": "No filename with height sent.", "position": []})
 
     file_path = Path(json_object["filename"])
     file_stem = file_path.stem
@@ -60,18 +62,18 @@ def find_laser_position ():
     try:
         pos = float(re.findall(r'(\d+(?:\.\d+)?)', file_stem)[1])
 
-        return jsonify ({"success": True, "message": "", "height":pos})
+        return jsonify({"success": True, "message": "", "height": pos})
     except:
-        return jsonify ({"success": False, "message": "Could not parse the height from the filename", "height":0})
+        return jsonify({"success": False, "message": "Could not parse the height from the filename", "height": 0})
 
 
 @bp.route('/preview_camera_solution', methods=["POST"])
-def preview_laser_solution ():
+def preview_laser_solution():
     """
     Given the solution in the selection boxes, calculate the projected points positions, and return with the actual point positions.
     The javascript viewer will be used to preview the solution and allow for manual refinement.
     """
-    return jsonify ({'success': False, 'message': "Method not implemented."})
+    return jsonify({'success': False, 'message': "Method not implemented."})
 
 
 @bp.route('/fit_laser', methods=['POST'])
@@ -82,13 +84,24 @@ def fit_laser():
     """
     json_object = request.get_json()
     if "heights" not in json_object or "points" not in json_object or "camera_calibration" not in json_object or 'laser_calibration' not in json_object or "rvec" not in json_object or "tvec" not in json_object:
-        return jsonify ({'success': False, 'message':"Invalid request from client."})
+        return jsonify({'success': False, 'message': "Invalid request from client."})
 
-    position = [ point for point in json_object['heights'] ]
-    points_2d = [ point for point in json_object['points'] ]
-    camera_cal = json_object['camera_calibration']    
+    position = [point for point in json_object['heights']]
+    points_2d = [point for point in json_object['points']]
+    camera_cal = json_object['camera_calibration']
     guess_laser_cal = json_object['laser_calibration']
     rvec = json_object['rvec']
     tvec = json_object['tvec']
 
-    return ({"success": False, "message":"Not Implemented"})
+    with open("LaserPoints.csv", "w") as fid:
+        for positions_2d, height in zip(points_2d, position):
+            for pos in positions_2d:
+                if pos[1] > 1:
+                    fid.write(
+                        f"{height/1000}, {pos[0]}, {pos[1]}\n")
+
+    print("Starting Laser Fit")
+
+    print("Ending Laser Fit")
+
+    return jsonify({"success": False, "message": "Not Implemented"})
