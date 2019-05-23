@@ -63,8 +63,10 @@ struct LaserReprojectionError {
     double p2 = distortion[Distortion::P2];
     double k3 = distortion[Distortion::K3];
 
-    cv::Mat sensor_point = (cv::Mat_<double>(2, 1) << observed_i, observed_j);
-    cv::Mat out_point = (cv::Mat_<double>(2, 1) << 0.0, 0.0);
+    cv::Mat sensor_point = cv::Mat(1, 1, CV_64FC2);
+    sensor_point.at<cv::Point2d>(0, 0) = cv::Point2f(observed_i, observed_j);
+
+    cv::Mat out_point = cv::Mat(1, 1, CV_64FC2);
 
     // Project point onto expected plane.
     cv::Mat cam_matrix =
@@ -165,7 +167,7 @@ struct LaserReprojectionError {
   double m_int_z;
 
   bool is_valid;
-}; // namespace voltera
+};
 
 } // namespace voltera
 

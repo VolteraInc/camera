@@ -14,4 +14,5 @@
         "*.tcc": "cpp"
       },
       "C_Cpp.clang_format_fallbackStyle": "LLVM",
+      "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
 }

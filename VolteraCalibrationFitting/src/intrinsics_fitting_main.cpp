@@ -15,6 +15,8 @@
 #include <vector>
 
 #include "VolteraCalibrationFitting/Intrinsics.h"
+#include "VolteraCalibrationFitting/LaserExtrinsics.h"
+#include "VolteraCalibrationFitting/LaserReprojectionError.h"
 #include "VolteraCalibrationFitting/LoadCSV.h"
 #include "VolteraCalibrationFitting/PreviewResiduals.h"
 #include "VolteraCalibrationFitting/ReprojectionError.h"
@@ -46,7 +48,7 @@ int main(int argc, char *argv[]) {
 
   parameters = {std::vector<double>({6325, 6325, 1640, 1232}),
                 std::vector<double>({0, 0, 0, 0, 0}),
-                std::vector<double>({-0.11, -0.035, 0, 0.005, -0.004, 0.0237})};
+                std::vector<double>({0.16, 0.014, 0, -0.005, 0.004, 0.02})};
 
   if (parse_result.count("parameters")) {
     if (!voltera::LoadCSV::load(parse_result["parameters"].as<std::string>(),
@@ -55,7 +57,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  std::cout << "Loading data." << std::endl;
+  std::cout << "Loading intrinsics data from " << input_file << std::endl;
   std::vector<std::vector<double>> data;
 
   if (!voltera::LoadCSV::load(input_file, data)) {
@@ -84,6 +86,25 @@ int main(int argc, char *argv[]) {
   voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, false,
                          false);
   voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
+
+  if (calibrate_laser) {
+    std::cout << std::endl
+              << "Loading laser data from " << laser_input_file << std::endl;
+    std::vector<std::vector<double>> laser_data;
+
+    double laser_plane[]{0, 0, 0, 0.025};
+
+    if (!voltera::LoadCSV::load(laser_input_file, laser_data)) {
+      std::cerr << "ERROR: Could not load laser data file: " << input_file
+                << std::endl;
+      return -1;
+    }
+    std::cout << "Loaded " << laser_data.size() << " points." << std::endl;
+
+    voltera::runLaserExtrinsics(laser_data, cam_matrix, distortion, extrinsics,
+                                laser_plane);
+  }
+
   return 0;
 }
 
@@ -93,7 +114,8 @@ cxxopts::ParseResult parse(int argc, char *argv[]) {
         argv[0], "This program calibrates the Voltera Camera/Laser system.");
     options.positional_help("[optional args]").show_positional_help();
 
-    options.add_options()("l,laser", "Calibrate Laser Plane")(
+    options.add_options()("l,laser", "Calibrate Laser Plane",
+                          cxxopts::value<std::string>())(
         "o,output_file", "Output file name", cxxopts::value<std::string>())(
         "p,parameters", "Input parameters guess file",
         cxxopts::value<std::string>())(
