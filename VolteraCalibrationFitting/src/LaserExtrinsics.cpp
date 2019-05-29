@@ -35,12 +35,27 @@ void runLaserExtrinsics(const std::vector<std::vector<double>> &data,
 
   std::cout << summary.FullReport() << "\n\n";
 
-  std::cout << "Laser Plane" << std::endl;
-  for (auto i = 0; i < voltera::LaserReprojectionError::SIZE_LASER_PLANE; ++i) {
-    std::cout << laser_plane[i] << ", ";
-  }
-  std::cout << std::endl << std::endl;
+  /**
+   * Generate the laser plane.
+   */
+  double temp_laser_plane_normal[voltera::LaserReprojectionError::SIZE_POINT3D]{
+      0.0, 0.0, -1};
+  double laser_plane_normal[voltera::LaserReprojectionError::SIZE_POINT3D]{
+      0.0, 0.0, 0.0};
+  double laser_plane_point[voltera::LaserReprojectionError::SIZE_POINT3D]{
+      0.0, 0.0, laser_plane[voltera::LaserReprojectionError::HEIGHT]};
 
+  ceres::AngleAxisRotatePoint(laser_plane, temp_laser_plane_normal,
+                              laser_plane_normal);
+
+  double d(-(laser_plane_normal[voltera::LaserReprojectionError::Point3D::Z] *
+             laser_plane_point[voltera::LaserReprojectionError::Point3D::Z]));
+
+  std::cout << "Laser Plane" << std::endl;
+  for (auto i = 0; i < voltera::LaserReprojectionError::SIZE_POINT3D; ++i) {
+    std::cout << laser_plane_normal[i] << ", ";
+  }
+  std::cout << d;
   std::cout << std::endl << std::endl;
 }
 } // namespace voltera

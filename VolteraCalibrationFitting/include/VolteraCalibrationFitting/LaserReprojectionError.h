@@ -27,12 +27,11 @@ struct LaserReprojectionError {
                          const double *initial_position)
       : m_int_x(0.0), m_int_y(0.0), m_int_z(0.0), is_valid(true) {
 
-    // initial_position[0,1,2] are the angle-axis rotation.
     double temp_plane_point[Point3D::SIZE_POINT3D]{0.0, 0.0, height};
     double temp_plane_normal[Point3D::SIZE_POINT3D]{0.0, 0.0, -1.0};
 
     double plane_point[Point3D::SIZE_POINT3D]{0.0, 0.0, 0.0};
-    double plane_normal[Point3D::SIZE_POINT3D]{0.0, 0.0, 0.0};
+    double plane_normal[Point3D::SIZE_POINT3D]{0.0, 0.0, -1.0};
 
     /*****
      * Transform the plane from world co-ords to cam co-ords with the initial
@@ -43,16 +42,16 @@ struct LaserReprojectionError {
     ceres::AngleAxisRotatePoint(initial_position, temp_plane_normal,
                                 plane_normal);
 
-    double d(-(plane_normal[Point3D::X] * plane_point[Point3D::X] +
-               plane_normal[Point3D::Y] * plane_point[Point3D::Y] +
-               plane_normal[Point3D::Z] * plane_point[Point3D::Z]));
-
     // initial_position[3,4,5] are the translation.
     plane_point[Point3D::X] += initial_position[Extrinsics::X_OFF];
     plane_point[Point3D::Y] += initial_position[Extrinsics::Y_OFF];
     plane_point[Point3D::Z] += initial_position[Extrinsics::Z_OFF];
 
-    // Undistort the 2d sensor point so it can be projected onto the plane.
+    double d(-(plane_normal[Point3D::X] * plane_point[Point3D::X] +
+               plane_normal[Point3D::Y] * plane_point[Point3D::Y] +
+               plane_normal[Point3D::Z] * plane_point[Point3D::Z]));
+
+        // Undistort the 2d sensor point so it can be projected onto the plane.
     double fx = camera_matrix[CamMatrix::FX];
     double fy = camera_matrix[CamMatrix::FY];
     double cx = camera_matrix[CamMatrix::CX];
@@ -73,7 +72,7 @@ struct LaserReprojectionError {
         (cv::Mat_<double>(3, 3) << fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0);
     cv::Mat dist = (cv::Mat_<double>(5, 1) << k1, k2, p1, p2, k3);
     cv::undistortPoints(sensor_point, out_point, cam_matrix, dist,
-                        cv::noArray(), cam_matrix);
+                        cv::noArray(), cv::noArray());
 
     double denom = plane_normal[Point3D::X] * out_point.at<double>(0) +
                    plane_normal[Point3D::Y] * out_point.at<double>(1) +
