@@ -31,16 +31,16 @@ var PointCloudViewer = function () {
 
     var scene, camera, renderer, controls, hemiLight, dirLight, viewerDiv, axis;
 
-    const pointSize = 0.00000005;
+    const pointSize = 0.000005;
     const pointsName = "points";
 
     function init(viewerDiv_in) {
 
         viewerDiv = viewerDiv_in;
-        
+
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(75, viewerDiv.offsetWidth / viewerDiv.offsetHeight, 0.0000000001, 10); //Real view, scaled with distance
-        camera.position.set(0, 0, 0.00005);
+        camera = new THREE.PerspectiveCamera(75, viewerDiv.offsetWidth / viewerDiv.offsetHeight, 0.000001, 10); //Real view, scaled with distance
+        camera.position.set(0, 0, 0.005);
         camera.lookAt(scene.position);
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -70,16 +70,16 @@ var PointCloudViewer = function () {
         controls.addEventListener('change', renderScene);
 
         //Adding control buttons
-        var buttons = [{style:"top:0px; right:0; width:75px;", id:"start", text:"Start", method:startPointCapture},
-            {style:"top:25px; right:0; width:75px;", id:"stop", text:"Stop", method:stopPointCapture},
-            {style:"top:50px; right:0; width:75px;", id:"save", text:"Save", method:savePoints},
-            {style:"top:0px; left:0;", id:"x_pos", text:"x+", method:function () {pointCamera([1, 0, 0])}},
-            {style:"top:0px; left:25px;", id:"x_neg", text:"x-", method:function () {pointCamera([-1, 0, 0])}},
-            {style:"top:25px; left:0;", id:"y_pos", text:"y+", method:function () {pointCamera([0, 1, 0])}},
-            {style:"top:25px; left:25px;", id:"y_neg", text:"y-", method:function () {pointCamera([0, -1, 0])}},
-            {style:"top:50px; left:0;", id:"z_pos", text:"z+", method:function () {pointCamera([0, 0, 1])}},
-            {style:"top:50px; left:25px", id:"z_neg", text:"z-", method:function () {pointCamera([0, 0, -1])}}];
-        
+        var buttons = [{ style: "top:0px; right:0; width:75px;", id: "start", text: "Start", method: startPointCapture },
+        { style: "top:25px; right:0; width:75px;", id: "stop", text: "Stop", method: stopPointCapture },
+        { style: "top:50px; right:0; width:75px;", id: "save", text: "Save", method: savePoints },
+        { style: "top:0px; left:0;", id: "x_pos", text: "x+", method: function () { pointCamera([1, 0, 0]) } },
+        { style: "top:0px; left:25px;", id: "x_neg", text: "x-", method: function () { pointCamera([-1, 0, 0]) } },
+        { style: "top:25px; left:0;", id: "y_pos", text: "y+", method: function () { pointCamera([0, 1, 0]) } },
+        { style: "top:25px; left:25px;", id: "y_neg", text: "y-", method: function () { pointCamera([0, -1, 0]) } },
+        { style: "top:50px; left:0;", id: "z_pos", text: "z+", method: function () { pointCamera([0, 0, 1]) } },
+        { style: "top:50px; left:25px", id: "z_neg", text: "z-", method: function () { pointCamera([0, 0, -1]) } }];
+
         for (var i = 0; i < buttons.length; i++) {
             var button = document.createElement("button");
             button.style.cssText = buttons[i].style;
@@ -108,7 +108,7 @@ var PointCloudViewer = function () {
         axis = new THREE.AxesHelper(0.000005);
         scene.add(axis);
 
-        addPoints([{"x":0, "y":0, "z":0, "i":0}]);
+        addPoints([{ "x": 0, "y": 0, "z": 0, "i": 0 }]);
         renderScene();
     };
 
@@ -118,9 +118,9 @@ var PointCloudViewer = function () {
      */
     var pointCamera = function (directionVector) {
         let currentPosition = camera.position;
-        let radius = Math.sqrt ( Object.values(currentPosition).reduce( (prev, current)=> prev + current*current, 0 ));
-        let new_cam_position = directionVector.map( x => radius*x );
-        camera.position.set (...new_cam_position);
+        let radius = Math.sqrt(Object.values(currentPosition).reduce((prev, current) => prev + current * current, 0));
+        let new_cam_position = directionVector.map(x => radius * x);
+        camera.position.set(...new_cam_position);
         camera.up = new THREE.Vector3(0.0, 1.0, 0.0);
         camera.lookAt(new THREE.Vector3(0, 0, 0));
     };
@@ -142,13 +142,13 @@ var PointCloudViewer = function () {
         renderer.render(scene, camera);
     };
 
-    var points = []; 
+    var points = [];
     var center = [0, 0, 0];
 
     function findCenter(points_to_add) {
         center = [0, 0, 0];
 
-        if ( points_to_add.length === 0 ){
+        if (points_to_add.length === 0) {
             return;
         }
         for (let point of points_to_add) {
@@ -163,7 +163,7 @@ var PointCloudViewer = function () {
 
     function addPoints(points_to_add) {
         if (points_to_add !== null) {
-            if (center.length === 3 && center.every(function(value, index) { return value === [0, 0, 0][index];})) {
+            if (center.length === 3 && center.every(function (value, index) { return value === [0, 0, 0][index]; })) {
                 findCenter(points_to_add);
             }
             points = points.concat(points_to_add);
@@ -226,7 +226,7 @@ var PointCloudViewer = function () {
         if (!capture_points) {
             clearPoints();
             capture_points = true;
-            fetch(start_url).then( function () {
+            fetch(start_url).then(function () {
                 console.log("Starting Point Capture");
                 getPoints();
             });
@@ -234,22 +234,22 @@ var PointCloudViewer = function () {
     }
 
     function savePoints() {
-        const concat_points = (accumulator, currentValue) => accumulator + String(currentValue.x) + ", " + 
-                                                             String(currentValue.y)+ ", " +String(currentValue.z)+ 
-                                                             ", " +String(currentValue.i) + "\n";
-        let csv_file = new Blob ([points.reduce (concat_points, "")], {type:"text/csv"});
+        const concat_points = (accumulator, currentValue) => accumulator + String(currentValue.x) + ", " +
+            String(currentValue.y) + ", " + String(currentValue.z) +
+            ", " + String(currentValue.i) + "\n";
+        let csv_file = new Blob([points.reduce(concat_points, "")], { type: "text/csv" });
         let file_url = URL.createObjectURL(csv_file);
         let temp_a = document.createElement("a");
         temp_a.href = file_url;
         temp_a.download = "point_file.csv";
         temp_a.type = "text/csv";
         document.body.appendChild(temp_a);
-        temp_a.click(); 
-        setTimeout(function() {
+        temp_a.click();
+        setTimeout(function () {
             document.body.removeChild(temp_a);
-            window.URL.revokeObjectURL(file_url);  
+            window.URL.revokeObjectURL(file_url);
         }, 0);
-        
+
     };
 
     function getPoints() {

@@ -277,7 +277,7 @@ class LaserProcessingClient(object):
         Grab the queued data.
         """
         in_string = self.socket.recv_string()
-        lines = [line.split(",")for line in in_string.split("\n") ][0:-1]
+        lines = [line.split(",") for line in in_string.split("\n") ][0:-1]
         if len(lines) == 0:
             return []
         points = [ {"x": float(point[1]), "y":float(point[2]) + float(point[0])*PROFILE_OFFSET, "z":float(point[3]), "i":point[4] } for point in lines ]

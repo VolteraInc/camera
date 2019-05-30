@@ -81,11 +81,11 @@ int main(int argc, char *argv[]) {
       stage_rotation[0], stage_rotation[1], stage_rotation[2],
       stage_offset[0],   stage_offset[1],   stage_offset[2]};
 
-  voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
+  // voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
   std::cout << "-------------------------------\nTotal Refinement" << std::endl;
   voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, false,
                          false);
-  voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
+  // voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
 
   if (calibrate_laser) {
     std::cout << std::endl

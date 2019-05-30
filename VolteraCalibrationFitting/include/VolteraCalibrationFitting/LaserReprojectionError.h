@@ -51,7 +51,7 @@ struct LaserReprojectionError {
                plane_normal[Point3D::Y] * plane_point[Point3D::Y] +
                plane_normal[Point3D::Z] * plane_point[Point3D::Z]));
 
-        // Undistort the 2d sensor point so it can be projected onto the plane.
+    // Undistort the 2d sensor point so it can be projected onto the plane.
     double fx = camera_matrix[CamMatrix::FX];
     double fy = camera_matrix[CamMatrix::FY];
     double cx = camera_matrix[CamMatrix::CX];

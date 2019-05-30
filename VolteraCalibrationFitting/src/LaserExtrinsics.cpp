@@ -55,7 +55,13 @@ void runLaserExtrinsics(const std::vector<std::vector<double>> &data,
   for (auto i = 0; i < voltera::LaserReprojectionError::SIZE_POINT3D; ++i) {
     std::cout << laser_plane_normal[i] << ", ";
   }
-  std::cout << d;
+  std::cout << d << std::endl << std::endl;
+
+  std::cout << "Laser Point" << std::endl;
+  for (auto i = 0; i < voltera::LaserReprojectionError::SIZE_POINT3D; ++i) {
+    std::cout << laser_plane_point[i] << ", ";
+  }
+
   std::cout << std::endl << std::endl;
 }
 } // namespace voltera
