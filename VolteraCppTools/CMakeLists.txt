@@ -1,7 +1,13 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0 )
-PROJECT(VolteraCalibrationFitting)
+PROJECT(VolteraCppTools)
 
 set (CMAKE_CXX_STANDARD 14)
+
+#Setup PyBind11
+add_subdirectory(pybind11)
+include_directories("${PROJECT_SOURCE_DIR}/libs/pybind11/include")
+set(PYBIND11_CPP_STANDARD -std=c++14)
+
 
 #Setup paths
 set(LIB_PATH                                   "${PROJECT_BINARY_DIR}/lib")
@@ -24,12 +30,16 @@ set(LIBRARY_SRC_FILES
 )
 
 set (HEADERS
-  "${INCLUDE_DIR}/VolteraCalibrationFitting/LoadCSV.h"
-  "${INCLUDE_DIR}/VolteraCalibrationFitting/ReprojectionError.h"
-  "${INCLUDE_DIR}/VolteraCalibrationFitting/Intrinsics.h"
-  "${INCLUDE_DIR}/VolteraCalibrationFitting/PreviewResiduals.h"
-  "${INCLUDE_DIR}/VolteraCalibrationFitting/LaserExtrinsics.h"
-  "${INCLUDE_DIR}/VolteraCalibrationFitting/LaserReprojectionError.h"
+  "${INCLUDE_DIR}/VolteraCppTools/LoadCSV.h"
+  "${INCLUDE_DIR}/VolteraCppTools/ReprojectionError.h"
+  "${INCLUDE_DIR}/VolteraCppTools/Intrinsics.h"
+  "${INCLUDE_DIR}/VolteraCppTools/PreviewResiduals.h"
+  "${INCLUDE_DIR}/VolteraCppTools/LaserExtrinsics.h"
+  "${INCLUDE_DIR}/VolteraCppTools/LaserReprojectionError.h"
+)
+
+set (PYTHON_BINDING_FILES
+  "${SRC_DIR}/VolteraCppToolsPythonBindings.cpp"
 )
 
 set(INTRINSICS_MAIN_SRC
@@ -52,6 +62,10 @@ INCLUDE_DIRECTORIES( include )
 
 #Set up library and executables
 ADD_LIBRARY(${LIB_NAME} ${LIBRARY_SRC_FILES} ${HEADERS})
+TARGET_LINK_LIBRARIES (${LIB_NAME} Eigen3::Eigen ${CERES_LIBRARIES} ${OpenCV_LIBS})
+
+#Set up python library
+pybind11_add_module( ${LIB_NAME}_Python ${LIBRARY_SOURCE_FILES} ${PYTHON_BINDING_FILES})
 TARGET_LINK_LIBRARIES (${LIB_NAME} Eigen3::Eigen ${CERES_LIBRARIES} ${OpenCV_LIBS})
 
 ADD_EXECUTABLE ( ${INTRINSICS_MAIN_NAME} ${INTRINSICS_MAIN_SRC})
