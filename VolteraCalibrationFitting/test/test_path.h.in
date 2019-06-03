@@ -1,0 +1,6 @@
+#ifndef TEST_PATH_H
+#define TEST_PATH_H
+
+const std::string test_data_path = "${TEST_DATA_DIR}";
+
+#endif

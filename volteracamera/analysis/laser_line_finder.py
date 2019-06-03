@@ -23,7 +23,18 @@ FILTER_SMOOTH = (np.zeros(KERNEL) + 1.0)/KERNEL
 FILTER_SHARPEN = (np.zeros(KERNEL) - 1.0)
 FILTER_SHARPEN[int(KERNEL/2)] = KERNEL 
 INTERVAL = 1
-PROFILE_OFFSET = 0.0000001 #move each profile over by 0.1 um in the y direction.
+PROFILE_OFFSET = 0.0001 #move each profile over by 0.1 mm in the y direction.
+
+
+def reject_outlier (data, m = 2, image_edge_threshold=200):
+    """
+    Reject points further than m standard deviations from the median value, and away from the bottom of the sensor.
+    """
+    data_return = np.zeros (len(data))
+    indexes_away_from_bottom = data > image_edge_threshold
+    indexes = abs(data - np.median(data[indexes_away_from_bottom])) < m * np.std(data[indexes_away_from_bottom])
+    data_return[indexes] = data[indexes]
+    return data_return
 
 class LaserLineFinder (object):
     """
@@ -208,7 +219,7 @@ class LaserProcessingServer (threading.Thread):
                         logging.debug ("Captured Image : {}".format(image_count))
                         image_points = finder.process(image[:,:,0]) 
                         image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
-                        intensities = [ image[ind[0][1], ind[0][0], 2] for ind in image_points_full ]
+                        intensities = [ image[int(ind[0][1]), int(ind[0][0]), 2] for ind in image_points_full ]
                         data_points = self.point_projector.project (image_points_full)
 
                         logging.debug("{} were found and are being transferred for display.".format (len(data_points)))
@@ -266,7 +277,7 @@ class LaserProcessingClient(object):
         Grab the queued data.
         """
         in_string = self.socket.recv_string()
-        lines = [line.split(",")for line in in_string.split("\n") ][0:-1]
+        lines = [line.split(",") for line in in_string.split("\n") ][0:-1]
         if len(lines) == 0:
             return []
         points = [ {"x": float(point[1]), "y":float(point[2]) + float(point[0])*PROFILE_OFFSET, "z":float(point[3]), "i":point[4] } for point in lines ]

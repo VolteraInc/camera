@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     volteracamera.analysis
+    volteracamera.calibration_tool
     volteracamera.control
     volteracamera.intrinsics
     volteracamera.web_server

@@ -8,5 +8,11 @@
         "**/*.pyc": true,
         "**/__pycache__": true,
       },
-      "restructuredtext.confPath": "${workspaceFolder}/docs/source"
+      "restructuredtext.confPath": "${workspaceFolder}/docs/source",
+      "terminal.integrated.lineHeight": 1.1,
+      "files.associations": {
+        "*.tcc": "cpp"
+      },
+      "C_Cpp.clang_format_fallbackStyle": "LLVM",
+      "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
 }

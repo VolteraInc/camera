@@ -58,14 +58,14 @@ def calibrate_from_3d_points ( points_3d, observed_points_2d, camera_matrix = No
     if not isinstance(rvec, np.ndarray):
         rvec = np.array([0, 0, 0])
     if not isinstance(tvec, np.ndarray):
-        tvec = np.array([0, 0, 0.02])
+        tvec = np.array([0.005, -0.002, 0.0237])
 
     parameters = [camera_matrix[0, 0], camera_matrix[1, 1], camera_matrix[0, 2], camera_matrix[1, 2], 
                   distortion[0], distortion[1], distortion[2], distortion[3], distortion[4],
                   rvec[0], rvec[1], rvec[2], tvec[0], tvec[1], tvec[2]]
 
     #res = so.least_squares(point_residuals, parameters, jac="3-point", x_scale='jac', method='trf', loss='linear', verbose=2, args=(points_3d, observed_points_2d))
-    res = so.minimize(single_residual, parameters, args=(points_3d, observed_points_2d), method="Powell")
+    res = so.minimize(single_residual, parameters, args=(points_3d, observed_points_2d), method="Powell", options={"disp":True})
     print("Actual Fit:")
     if res.success:
         print ("Fit sucessful.")
@@ -110,10 +110,11 @@ def main():
 
     camera_matrix = np.array([[5357, 0, 1640], [0, 5357, 1232], [0, 0, 1]])
     distortion = np.array([0, 0, 0, 0, 0])
-    undistort = calibrate_from_3d_points (position, points_2d, camera_matrix, distortion, rvec, tvec)
+    print ("Inputs loaded, running calibration. This will take awhile.")
+    undistort = calibrate_from_3d_points (position, points_2d, camera_matrix, distortion, None, None)
 
     print (undistort)
-
+    out_cal = undistort[0]
     print ("Saving Calibration to " + args.output_file)
 
     out_cal.write_file(args.output_file)

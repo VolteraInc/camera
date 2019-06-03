@@ -112,3 +112,10 @@ dmypy.json
 
 #vim swp files
 *.swp
+
+#temp header files
+VolteraCalibrationFitting/test/test_path.h
+
+#temp files
+*.json
+*.csv
