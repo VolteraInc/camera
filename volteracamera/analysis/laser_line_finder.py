@@ -219,7 +219,7 @@ class LaserProcessingServer (threading.Thread):
                         logging.debug ("Captured Image : {}".format(image_count))
                         image_points = finder.process(image[:,:,0]) 
                         image_points_full = [[[i, j]] for i, j in enumerate(image_points)]
-                        intensities = [ image[ind[0][1], ind[0][0], 2] for ind in image_points_full ]
+                        intensities = [ image[int(ind[0][1]), int(ind[0][0]), 2] for ind in image_points_full ]
                         data_points = self.point_projector.project (image_points_full)
 
                         logging.debug("{} were found and are being transferred for display.".format (len(data_points)))
@@ -277,7 +277,7 @@ class LaserProcessingClient(object):
         Grab the queued data.
         """
         in_string = self.socket.recv_string()
-        lines = [line.split(",")for line in in_string.split("\n") ][0:-1]
+        lines = [line.split(",") for line in in_string.split("\n") ][0:-1]
         if len(lines) == 0:
             return []
         points = [ {"x": float(point[1]), "y":float(point[2]) + float(point[0])*PROFILE_OFFSET, "z":float(point[3]), "i":point[4] } for point in lines ]
