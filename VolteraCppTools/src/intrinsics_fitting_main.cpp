@@ -14,12 +14,12 @@
 #include <ceres/ceres.h>
 #include <vector>
 
-#include "VolteraCalibrationFitting/Intrinsics.h"
-#include "VolteraCalibrationFitting/LaserExtrinsics.h"
-#include "VolteraCalibrationFitting/LaserReprojectionError.h"
-#include "VolteraCalibrationFitting/LoadCSV.h"
-#include "VolteraCalibrationFitting/PreviewResiduals.h"
-#include "VolteraCalibrationFitting/ReprojectionError.h"
+#include "VolteraCppTools/Intrinsics.h"
+#include "VolteraCppTools/LaserExtrinsics.h"
+#include "VolteraCppTools/LaserReprojectionError.h"
+#include "VolteraCppTools/LoadCSV.h"
+#include "VolteraCppTools/PreviewResiduals.h"
+#include "VolteraCppTools/ReprojectionError.h"
 
 cxxopts::ParseResult parse(int argc, char *argv[]);
 

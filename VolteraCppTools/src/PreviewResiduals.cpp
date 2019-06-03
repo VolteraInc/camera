@@ -1,6 +1,6 @@
-#include "VolteraCalibrationFitting/PreviewResiduals.h"
+#include "VolteraCppTools/PreviewResiduals.h"
 
-#include "VolteraCalibrationFitting/ReprojectionError.h"
+#include "VolteraCppTools/ReprojectionError.h"
 #include <opencv2/opencv.hpp>
 
 namespace voltera {

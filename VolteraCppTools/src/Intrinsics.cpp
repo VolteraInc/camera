@@ -1,5 +1,5 @@
-#include "VolteraCalibrationFitting/Intrinsics.h"
-#include "VolteraCalibrationFitting/ReprojectionError.h"
+#include "VolteraCppTools/Intrinsics.h"
+#include "VolteraCppTools/ReprojectionError.h"
 #include <ceres/ceres.h>
 #include <iostream>
 
