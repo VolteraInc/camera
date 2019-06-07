@@ -32,6 +32,7 @@ set(LIBRARY_SRC_FILES
   "${SRC_DIR}/Intrinsics.cpp"
   "${SRC_DIR}/PreviewResiduals.cpp"
   "${SRC_DIR}/LaserExtrinsics.cpp"
+  "${SRC_DIR}/AnalysisImage.cpp"
 )
 
 set (HEADERS
@@ -41,6 +42,8 @@ set (HEADERS
   "${INCLUDE_DIR}/VolteraCppTools/PreviewResiduals.h"
   "${INCLUDE_DIR}/VolteraCppTools/LaserExtrinsics.h"
   "${INCLUDE_DIR}/VolteraCppTools/LaserReprojectionError.h"
+  "${INCLUDE_DIR}/VolteraCppTools/AnalysisImage.h"
+
 )
 
 set (PYTHON_BINDING_FILES

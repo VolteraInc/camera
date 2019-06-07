@@ -6,8 +6,10 @@
 namespace voltera {
 
 void runLaserExtrinsics(const std::vector<std::vector<double>> &data,
-                        const double *cam_matrix, const double *distortion,
-                        const double *extrinsics, double *laser_plane);
+                        const std::vector<double> &cam_matrix, 
+                        const std::vector<double> & distortion,
+                        const std::vector<double> &extrinsics, 
+                        std::vector <double> &laser_plane);
 }
 
 #endif

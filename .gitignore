@@ -114,7 +114,7 @@ dmypy.json
 *.swp
 
 #temp header files
-VolteraCalibrationFitting/test/test_path.h
+VolteraCppTools/test/test_path.h
 
 #temp files
 *.json

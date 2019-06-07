@@ -73,13 +73,11 @@ int main(int argc, char *argv[]) {
   const double fx(parameters[0][0]), fy(parameters[0][1]);
   const double cx(parameters[0][2]), cy(parameters[0][3]);
 
-  double cam_matrix[voltera::ReprojectionError::SIZE_CAMMATRIX] = {fx, fy, cx,
-                                                                   cy};
-  double distortion[voltera::ReprojectionError::SIZE_DISTORTION] = {0, 0, 0, 0,
-                                                                    0};
-  double extrinsics[voltera::ReprojectionError::SIZE_EXTRINSICS] = {
-      stage_rotation[0], stage_rotation[1], stage_rotation[2],
-      stage_offset[0],   stage_offset[1],   stage_offset[2]};
+  std::vector<double> cam_matrix{fx, fy, cx, cy};
+  std::vector<double> distortion{0, 0, 0, 0, 0};
+  std::vector<double> extrinsics{stage_rotation[0], stage_rotation[1],
+                                 stage_rotation[2], stage_offset[0],
+                                 stage_offset[1],   stage_offset[2]};
 
   // voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
   std::cout << "-------------------------------\nTotal Refinement" << std::endl;
@@ -92,7 +90,7 @@ int main(int argc, char *argv[]) {
               << "Loading laser data from " << laser_input_file << std::endl;
     std::vector<std::vector<double>> laser_data;
 
-    double laser_plane[]{0, 0, 0, 0.025};
+    std::vector<double> laser_plane{0, 0, 0, 0.025};
 
     if (!voltera::LoadCSV::load(laser_input_file, laser_data)) {
       std::cerr << "ERROR: Could not load laser data file: " << input_file

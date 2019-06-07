@@ -4,8 +4,15 @@
 namespace voltera {
 
 void runLaserExtrinsics(const std::vector<std::vector<double>> &data,
-                        const double *cam_matrix, const double *distortion,
-                        const double *extrinsics, double *laser_plane) {
+                        const std::vector<double> &cam_matrix,
+                        const std::vector<double> &distortion,
+                        const std::vector<double> &extrinsics,
+                        std::vector<double> &laser_plane) {
+
+  double laser_plane_arr[LaserReprojectionError::SIZE_LASER_PLANE];
+
+  memcpy(laser_plane_arr, laser_plane.data(),
+         sizeof(double) * LaserReprojectionError::SIZE_LASER_PLANE);
 
   ceres::Problem problem;
   for (const auto &point : data) {
@@ -17,11 +24,12 @@ void runLaserExtrinsics(const std::vector<std::vector<double>> &data,
     }
     ceres::CostFunction *cost_function =
         voltera::LaserReprojectionError::Create(
-            point[1], point[2], point[0], cam_matrix, distortion, extrinsics);
+            point[1], point[2], point[0], cam_matrix.data(), distortion.data(),
+            extrinsics.data());
 
     if (cost_function != nullptr) {
       problem.AddResidualBlock(cost_function, NULL /* squared loss */,
-                               laser_plane);
+                               laser_plane_arr);
     }
   }
 
@@ -43,13 +51,17 @@ void runLaserExtrinsics(const std::vector<std::vector<double>> &data,
   double laser_plane_normal[voltera::LaserReprojectionError::SIZE_POINT3D]{
       0.0, 0.0, 0.0};
   double laser_plane_point[voltera::LaserReprojectionError::SIZE_POINT3D]{
-      0.0, 0.0, laser_plane[voltera::LaserReprojectionError::HEIGHT]};
+      0.0, 0.0, laser_plane_arr[voltera::LaserReprojectionError::HEIGHT]};
 
-  ceres::AngleAxisRotatePoint(laser_plane, temp_laser_plane_normal,
+  ceres::AngleAxisRotatePoint(laser_plane_arr, temp_laser_plane_normal,
                               laser_plane_normal);
 
   double d(-(laser_plane_normal[voltera::LaserReprojectionError::Point3D::Z] *
              laser_plane_point[voltera::LaserReprojectionError::Point3D::Z]));
+
+  for (auto i = 0; i < LaserReprojectionError::SIZE_LASER_PLANE; ++i) {
+    laser_plane[i] = laser_plane_arr[i];
+  }
 
   std::cout << "Laser Plane" << std::endl;
   for (auto i = 0; i < voltera::LaserReprojectionError::SIZE_POINT3D; ++i) {

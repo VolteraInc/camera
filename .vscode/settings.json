@@ -11,7 +11,8 @@
       "restructuredtext.confPath": "${workspaceFolder}/docs/source",
       "terminal.integrated.lineHeight": 1.1,
       "files.associations": {
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "iostream": "cpp"
       },
       "C_Cpp.clang_format_fallbackStyle": "LLVM",
       "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
