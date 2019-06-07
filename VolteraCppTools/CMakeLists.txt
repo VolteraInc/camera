@@ -17,7 +17,7 @@ set(INTRINSICS_MAIN_NAME                       "IntrinsicsFitter")
 set(TEST_PATH                                  "${PROJECT_BINARY_DIR}/test")
 set ( TEST_NAME ${LIB_NAME}_tests)
 
-set (BUILD_MAIN OFF)
+set (BUILD_MAIN ON)
 set (BUILD_TESTS OFF)
 set (BUILD_PYTHON ON)
 set (PYBIND11_PYTHON_VERSION 3.5)

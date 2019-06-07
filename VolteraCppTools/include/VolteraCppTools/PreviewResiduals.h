@@ -6,9 +6,10 @@
 namespace voltera {
 
 void previewIntrinsics(const std::vector<std::vector<double>> &data,
-                       double *cam_matrix, double *distortion,
-                       double *extrinsics, double image_width = 3280,
-                       double image_height = 2464);
+                       const std::vector<double> &cam_matrix,
+                       const std::vector<double> &distortion,
+                       const std::vector<double> &extrinsics,
+                       double image_width = 3280, double image_height = 2464);
 }
 
 #endif

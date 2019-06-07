@@ -79,11 +79,15 @@ int main(int argc, char *argv[]) {
                                  stage_rotation[2], stage_offset[0],
                                  stage_offset[1],   stage_offset[2]};
 
-  // voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
+  if (parse_result.count("view")) {
+    voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
+  }
   std::cout << "-------------------------------\nTotal Refinement" << std::endl;
   voltera::runIntrinsics(data, cam_matrix, distortion, extrinsics, false,
                          false);
-  // voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
+  if (parse_result.count("view")) {
+    voltera::previewIntrinsics(data, cam_matrix, distortion, extrinsics);
+  }
 
   if (calibrate_laser) {
     std::cout << std::endl
@@ -118,7 +122,8 @@ cxxopts::ParseResult parse(int argc, char *argv[]) {
         "p,parameters", "Input parameters guess file",
         cxxopts::value<std::string>())(
         "input_file", "Input filename",
-        cxxopts::value<std::vector<std::string>>())("h,help", "Print help");
+        cxxopts::value<std::vector<std::string>>())(
+        "v,view", "View the intrinsics fit result.")("h,help", "Print help");
     options.parse_positional({"input_file"});
 
     auto result = options.parse(argc, argv);

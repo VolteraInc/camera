@@ -6,9 +6,10 @@
 namespace voltera {
 
 void previewIntrinsics(const std::vector<std::vector<double>> &data,
-                       double *cam_matrix, double *distortion,
-                       double *extrinsics, double image_width,
-                       double image_height) {
+                       const std::vector<double> &cam_matrix,
+                       const std::vector<double> &distortion,
+                       const std::vector<double> &extrinsics,
+                       double image_width, double image_height) {
 
   std::vector<std::vector<double>> residuals;
   residuals.reserve(data.size());
@@ -20,7 +21,8 @@ void previewIntrinsics(const std::vector<std::vector<double>> &data,
     double res[2];
     voltera::ReprojectionError temp_cost_function(point[0], point[1], point[2],
                                                   point[3], point[4]);
-    temp_cost_function(cam_matrix, distortion, extrinsics, res);
+    temp_cost_function(cam_matrix.data(), distortion.data(), extrinsics.data(),
+                       res);
 
     std::vector<double> single_residual(
         {point[0], point[1], point[0] - res[0], point[1] - res[1]});
@@ -36,9 +38,9 @@ void previewIntrinsics(const std::vector<std::vector<double>> &data,
     // Difference line
     cv::line(image, image_point, projected_point, cv::Scalar(0, 0, 255));
     // original point green
-    cv::circle(image, image_point, 3, cv::Scalar(0, 255, 0));
+    cv::circle(image, image_point, 5, cv::Scalar(0, 255, 0));
     // original point blue
-    cv::circle(image, projected_point, 3, cv::Scalar(255, 0, 0));
+    cv::circle(image, projected_point, 5, cv::Scalar(255, 0, 0));
   }
 
   cv::Mat display_image(image_height / 4, image_width / 4, CV_8UC3);
