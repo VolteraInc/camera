@@ -5,7 +5,7 @@
 
 namespace voltera {
 
-Eigen::VectorXd &findImagePeaks(Eigen::Ref<Eigen::MatrixXd> image);
+Eigen::VectorXd findImagePeaks(Eigen::Ref<Eigen::MatrixXd> image);
 }
 
 #endif
