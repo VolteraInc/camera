@@ -18,7 +18,7 @@ set(TEST_PATH                                  "${PROJECT_BINARY_DIR}/test")
 set ( TEST_NAME ${LIB_NAME}_tests)
 
 set (BUILD_MAIN ON)
-set (BUILD_TESTS OFF)
+set (BUILD_TESTS ON)
 set (BUILD_PYTHON ON)
 set (PYBIND11_PYTHON_VERSION 3.5)
 
@@ -60,6 +60,7 @@ SET (TEST_DATA_DIR "${TEST_SRC_DIR}/test_data/")
 CONFIGURE_FILE ("${TEST_SRC_DIR}/test_path.h.in" "${TEST_SRC_DIR}/test_path.h")
 set(TEST_SRC
   "${TEST_SRC_DIR}/testLoadCSV.cpp"
+  "${TEST_SRC_DIR}/testLineFinder.cpp"
 )
 
 #External Libraries
