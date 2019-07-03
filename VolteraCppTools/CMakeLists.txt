@@ -3,6 +3,9 @@ PROJECT(VolteraCppTools)
 
 set (CMAKE_CXX_STANDARD 14)
 
+find_package(PythonExtensions REQUIRED)
+
+
 #Setup PyBind11
 add_subdirectory(${PROJECT_SOURCE_DIR}/libs/pybind11)
 #include_directories("${PROJECT_SOURCE_DIR}/libs/pybind11/include")
@@ -74,9 +77,13 @@ INCLUDE_DIRECTORIES( include )
 
 if (BUILD_PYTHON)
 #Set up python library
-pybind11_add_module( ${LIB_NAME}_Python ${PYTHON_BINDING_FILES})
+pybind11_add_module( ${LIB_NAME}_Python ${PYTHON_BINDING_FILES} ${LIBRARY_SRC_FILES})
 TARGET_LINK_LIBRARIES (${LIB_NAME}_Python PUBLIC Eigen3::Eigen ${CERES_LIBRARIES} ${OpenCV_LIBS})
+install(TARGETS ${LIB_NAME}_Python LIBRARY DESTINATION volteracamera)
 endif()
+
+
+
 
 if (BUILD_MAIN OR BUILD_TESTS)
 #Set up library and executables
