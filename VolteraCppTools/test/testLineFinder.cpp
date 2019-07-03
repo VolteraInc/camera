@@ -6,7 +6,8 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
-Eigen::MatrixXd loadImage(const std::string &filename) {
+Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>
+loadImage(const std::string &filename) {
   cv::Mat image;
 
   image = cv::imread(filename, cv::IMREAD_GRAYSCALE); // Read the file
@@ -22,7 +23,8 @@ Eigen::MatrixXd loadImage(const std::string &filename) {
   //     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
   // out_m(image.ptr<double>(), image.rows, image.cols);
 
-  Eigen::MatrixXd output_matrix(image.rows, image.cols);
+  Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> output_matrix(
+      image.rows, image.cols);
   cv::cv2eigen(image, output_matrix);
 
   return output_matrix;
@@ -51,7 +53,8 @@ TEST(TestLineFinder, general_test) {
   std::string filename = test_data_path + "laser_image.jpg";
   Eigen::VectorXd out_data;
 
-  Eigen::MatrixXd image = loadImage(filename);
+  Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> image =
+      loadImage(filename);
 
   out_data = voltera::findImagePeaks(image);
 

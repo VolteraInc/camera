@@ -2,7 +2,8 @@
 
 namespace voltera {
 
-Eigen::VectorXd findImagePeaks(Eigen::Ref<Eigen::MatrixXd> image) {
+Eigen::VectorXd
+findImagePeaks(Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> &image) {
 
   Eigen::VectorXd return_vector(image.cols());
 
